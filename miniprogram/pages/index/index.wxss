@@ -1,0 +1,82 @@
+.page { padding: 24rpx 20rpx 40rpx; }
+.center { text-align: center; padding: 200rpx 40rpx; }
+.muted { color: #6b7280; }
+.small { font-size: 24rpx; }
+.err { color: #dc2626; font-size: 26rpx; word-break: break-all; }
+.card {
+  background: #fff; border: 1rpx solid #e5e7eb; border-radius: 20rpx;
+  padding: 28rpx; margin-bottom: 22rpx;
+}
+.h2 { font-size: 30rpx; font-weight: 700; margin-bottom: 16rpx; }
+
+/* ===== 顶部温度计 ===== */
+.top { display: flex; gap: 30rpx; }
+.thermo-col { display: flex; gap: 14rpx; }
+.thermo {
+  position: relative; width: 64rpx; height: 420rpx; border-radius: 32rpx;
+  background: linear-gradient(to top, #16a34a 0%, #84cc16 30%, #facc15 50%, #ea580c 72%, #dc2626 100%);
+  border: 6rpx solid #fff;
+  box-shadow: 0 0 0 1rpx #e5e7eb, 0 8rpx 24rpx rgba(0,0,0,.08);
+}
+.marker {
+  position: absolute; left: -18rpx; width: 100rpx; height: 8rpx;
+  background: #111; border-radius: 4rpx;
+}
+.scale {
+  display: flex; flex-direction: column; justify-content: space-between;
+  height: 420rpx; font-size: 20rpx; color: #9ca3af;
+}
+.stage-col { flex: 1; }
+.score { font-size: 76rpx; font-weight: 800; line-height: 1.1; }
+.unit { font-size: 28rpx; color: #6b7280; font-weight: 400; }
+.delta { font-size: 26rpx; margin-left: 12rpx; font-weight: 700; }
+.delta.up { color: #dc2626; }
+.delta.down { color: #16a34a; }
+.stage { font-size: 36rpx; font-weight: 800; margin: 10rpx 0 8rpx; }
+.stage-desc { font-size: 25rpx; color: #374151; line-height: 1.65; }
+.updated { font-size: 22rpx; color: #9ca3af; margin-top: 14rpx; }
+
+/* ===== 信号卡 ===== */
+.sig-head { display: flex; align-items: flex-start; gap: 18rpx; }
+.idx {
+  width: 60rpx; height: 60rpx; border-radius: 14rpx; color: #fff;
+  font-weight: 800; font-size: 30rpx; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+}
+.sig-title { flex: 1; min-width: 0; }
+.name { font-size: 28rpx; font-weight: 700; }
+.w { font-size: 22rpx; color: #9ca3af; font-weight: 400; }
+.lead { font-size: 22rpx; color: #6b7280; margin-top: 4rpx; }
+.gauge { text-align: right; flex-shrink: 0; }
+.val { font-size: 40rpx; font-weight: 800; }
+.tag { font-size: 20rpx; padding: 4rpx 14rpx; border-radius: 99rpx; font-weight: 600; }
+.bar { height: 12rpx; background: #eef0f3; border-radius: 6rpx; overflow: hidden; margin: 18rpx 0 8rpx; }
+.fill { height: 100%; border-radius: 6rpx; }
+.reading { font-size: 25rpx; color: #374151; line-height: 1.7; margin-top: 10rpx; }
+.src-list { margin-top: 14rpx; }
+.src {
+  font-size: 23rpx; color: #2563eb; padding: 8rpx 0;
+  border-top: 1rpx dashed #e5e7eb;
+}
+.copy-hint { color: #9ca3af; font-size: 20rpx; margin-left: 8rpx; }
+.fold-hint { font-size: 22rpx; color: #9ca3af; margin-top: 6rpx; }
+
+/* ===== 历史 ===== */
+.chart { width: 100%; height: 300rpx; margin-bottom: 16rpx; }
+.hist-rows { font-size: 23rpx; }
+.hist-row {
+  display: flex; padding: 10rpx 0; border-bottom: 1rpx solid #f3f4f6;
+  align-items: center;
+}
+.hist-row.head { color: #6b7280; font-weight: 600; }
+.c-date { width: 170rpx; }
+.c-s { flex: 1; text-align: center; }
+.c-t { width: 110rpx; text-align: right; }
+.bold { font-weight: 800; }
+
+/* ===== 其他 ===== */
+.comment { font-size: 26rpx; line-height: 1.8; color: #374151; }
+.disclaimer {
+  font-size: 21rpx; color: #9ca3af; line-height: 1.7;
+  padding: 10rpx 16rpx 30rpx; text-align: center;
+}
