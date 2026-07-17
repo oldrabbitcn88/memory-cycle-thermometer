@@ -1,20 +1,32 @@
 {
-  "updated": "2026-07-13",
-  "total": 53,
+  "updated": "2026-07-17",
+  "total": 58,
   "stage": "过热中期 → 顶部预警",
   "stage_desc": "多个领先信号亮黄/红灯。历史上此阶段距拐点约6–12个月，应制定退出触发条件。",
-  "weights": [0.25, 0.2, 0.2, 0.2, 0.15],
+  "weights": [
+    0.25,
+    0.2,
+    0.2,
+    0.2,
+    0.15
+  ],
   "signals": [
     {
       "id": 1,
       "name": "现货价 vs 合约价倒挂",
       "lead": "领先约1–2个季度 · 最直接的拐点触发器",
       "weight": 0.25,
-      "score": 30,
-      "reading": "未倒挂，现货仍强于合约。主流DDR4现货7月上旬周涨2.88%（$36.10→$37.14），DDR3/低容量DDR4补涨。但TrendForce连续三周描述现货成交清淡、买方抵制高报价、大盘横盘——动能正从抢货转向观望。",
+      "score": 42,
+      "reading": "DDR4现货价近两周出现自年内以来\"首次下跌5%\"，成交转弱；TrendForce最新展望显示Q3常规DRAM合约价预计仅涨13-18%、NAND涨10-15%，较Q2约60%的涨幅明显放缓，消费电子厂商已达到承受上限、抵制继续提价；但服务器/HBM段仍供不应求，合约与现货价差尚未收敛到±3%区间，也未出现连续4周现货下跌，暂未构成价格倒挂或深度收敛信号。",
       "sources": [
-        {"title": "TrendForce 现货周报 07-08", "url": "https://www.trendforce.com/news/2026/07/08/insights-memory-spot-price-update-dram-spot-trading-remains-subdued-with-ddr3-and-4gb-ddr4-prices-edging-higher/"},
-        {"title": "TrendForce 3Q26 展望", "url": "https://www.trendforce.com/presscenter/news/20260703-13134.html"}
+        {
+          "title": "Tom's Hardware - Memory price surge begins to cool as consumers hit affordability limit",
+          "url": "https://www.tomshardware.com/pc-components/ram/memory-price-surge-begins-to-cool-as-consumers-hit-affordability-limit-ai-demand-still-keeps-dram-and-nand-prices-climbing-through-q3-2026"
+        },
+        {
+          "title": "TrendForce DRAM Price Trends",
+          "url": "https://www.trendforce.com/price/dram/dram_spot"
+        }
       ]
     },
     {
@@ -22,11 +34,21 @@
       "name": "设备商存储订单增速",
       "lead": "领先12–18个月 · 供给释放的先行指标",
       "weight": 0.2,
-      "score": 80,
-      "reading": "红灯。三星2026半导体capex约$400亿（+20%），美光、SK海力士各增40%以上；韩国官宣海力士+三星约$5750亿新厂计划；WFE于2026上半年密集装机；CXMT拟IPO后扩大低端DRAM供给。2027下半年–2028供给集中释放已锁定。",
+      "score": 88,
+      "reading": "设备端capex再度加码：三星、SK海力士上月联合宣布800万亿韩元(约5170亿美元)投资在韩西南部新建两座晶圆厂；美光7月8日为新工厂动工，并计划在美追加2500亿美元投资；SK海力士Yongin一期追加150亿美元、提前投产；CXMT本身7月16日登陆上海科创板、募资约43亿美元，产能目标2026年底达35万片/月逼近美光。多座新厂并行叠加中国新玩家同步扩产，呈现同比增速>30%的极端扩产态势。",
       "sources": [
-        {"title": "Motley Fool: SKH+三星$575B扩产", "url": "https://www.fool.com/investing/2026/07/06/microns-strategy-face-sk-hynix-samsung-spend/"},
-        {"title": "Semiconductor Intelligence: Capex Up", "url": "https://www.semiconductorintelligence.com/capex-up-for-foundry-memory/"}
+        {
+          "title": "SK Hynix Commits Additional USD 15 Billion, Escalating Fab Expansion Race among Memory Giants",
+          "url": "https://www.trendforce.com/news/2026/03/05/news-sk-hynix-commits-additional-usd-15-billion-escalating-fab-expansion-race-among-memory-giants/"
+        },
+        {
+          "title": "How SK Hynix just pulled off the second-largest U.S. share sale - Fortune",
+          "url": "https://fortune.com/2026/07/11/sk-hynix-us-stock-listing-nasdaq-second-largest-us-share-sale-ai-boom-hbw-memory/"
+        },
+        {
+          "title": "CXMT close to matching Micron's memory capacity in 2026 - Tom's Hardware",
+          "url": "https://www.tomshardware.com/pc-components/dram/cxmt-close-to-matching-microns-memory-capacity-in-2026-research-claims-would-put-china-on-track-to-become-worlds-second-largest-dram-producer"
+        }
       ]
     },
     {
@@ -34,11 +56,17 @@
       "name": "下游库存与囤货行为",
       "lead": "领先2–3个季度 · 表观需求虚增的检验器",
       "weight": 0.2,
-      "score": 50,
-      "reading": "结构分化。OEM/渠道库存仅2–4周（历史顶部15–31周），但大型OEM与数据中心锁定2–3年长约、企业级SSD 1Q26合约价环比涨53–58%创纪录、NAND原厂称2026全年售罄——长约锁量是囤货的合同化形态，退坡时更隐蔽。",
+      "score": 52,
+      "reading": "服务器/DRAM端库存仍偏紧（此前报告2-4周），长约(LTA)持续盛行——美光已锁定16家客户5年期供货合约，HBM2026年产能已售罄；但消费端出现分化：PC厂商在2026上半年已积累大量client SSD库存，对再度提价意愿明显下降，笔电厂商仍在补库但对涨价更谨慎，显示部分品类库存已从极紧张转向温和累积。",
       "sources": [
-        {"title": "Luminix: DRAM周期库存分析", "url": "https://www.useluminix.com/reports/industry-analysis/dram-cycle-position-analysis-peak-timing-indicators"},
-        {"title": "Tom's Hardware: RAM危机将恶化", "url": "https://www.tomshardware.com/pc-components/dram/the-ram-pricing-crisis-has-only-just-started-team-group-gm-warns-says-problem-will-get-worse-in-2026-as-dram-and-nand-prices-double-in-one-month"}
+        {
+          "title": "Tom's Hardware - Memory price surge begins to cool",
+          "url": "https://www.tomshardware.com/pc-components/ram/memory-price-surge-begins-to-cool-as-consumers-hit-affordability-limit-ai-demand-still-keeps-dram-and-nand-prices-climbing-through-q3-2026"
+        },
+        {
+          "title": "Tech Experts Warn: Memory Shortage Crisis Won't Ease Until 2028 - Yahoo Finance",
+          "url": "https://finance.yahoo.com/technology/articles/tech-experts-warn-memory-shortage-024010093.html"
+        }
       ]
     },
     {
@@ -46,11 +74,17 @@
       "name": "最大需求引擎的边际变化（AI capex）",
       "lead": "核心变量 · 上轮是手机+挖矿，本轮是云厂商",
       "weight": 0.2,
-      "score": 35,
-      "reading": "引擎仍在加速。四大云厂2026 capex指引合计约$7250亿（+77%），Meta上调至$1250–1450亿，微软披露$800亿Azure订单因电力受限积压；市场预期2027破$1万亿。边际隐忧：capex/收入缺口拉大，回报率质疑声出现。",
+      "score": 32,
+      "reading": "四大云厂商2026年capex指引：Alphabet上调至1800-1900亿美元、Meta上调至1250-1450亿美元(均提及内存涨价推高成本)、微软维持1900亿美元、亚马逊维持2000亿美元不变(未上调也未下调)——无一家下调或推迟项目；但Mizuho等卖方开始质疑高capex下自由现金流与投资回报的不确定性，'见顶质疑声'较上期略增，尚未出现实质性下修或推迟。",
       "sources": [
-        {"title": "Tom's Hardware: 四大云厂$725B", "url": "https://www.tomshardware.com/tech-industry/big-tech/big-techs-ai-spending-plans-reach-725-billion"},
-        {"title": "Forbes: AI capex/收入缺口", "url": "https://www.forbes.com/sites/jasonkirsch/2026/06/02/the-ai-capex-to-revenue-gap-is-widening---and-markets-are-starting-to-notice/"}
+        {
+          "title": "Alphabet, Amazon, Microsoft, and Meta plan to spend more than $700 billion on capex this year - Sherwood News",
+          "url": "https://sherwood.news/tech/alphabet-amazon-microsoft-meta-plan-more-than-700-billion-on-capex-this-year/"
+        },
+        {
+          "title": "Tech AI spending approaches $700 billion in 2026, cash taking big hit - CNBC",
+          "url": "https://www.cnbc.com/2026/02/06/google-microsoft-meta-amazon-ai-cash.html"
+        }
       ]
     },
     {
@@ -58,17 +92,50 @@
       "name": "卖方一致性与管理层话术",
       "lead": "反向指标 · 预测年份后移=警觉信号",
       "weight": 0.15,
-      "score": 85,
-      "reading": "红灯。短缺预测年份持续后移：缺到2027→三星/美光称2028缓解→SK海力士CEO在纳斯达克上市当天称短缺持续到2030以后。美光称当前只是first innings。主流卖方一致看多至2028，仅Bloomberg Intelligence一家提出2028可能过剩。",
+      "score": 90,
+      "reading": "叙事端本期出现标志性事件：SK海力士7月10日在纳斯达克完成265亿美元ADR上市(史上最大外国企业赴美IPO)，首日暴涨13%；CXMT同期(7月16日)登陆上海科创板募资约43亿美元；SK海力士CEO郭珑重直言2027年将是'最差年份'、缺货或持续至2030年，与三星共同强化\"超级周期\"叙事；同时也有分析师提示这可能重演历史\"繁荣-萧条\"周期，但看空声音仍属少数，预测年份已明确后移至3年以上并伴随巨额上市融资。",
       "sources": [
-        {"title": "Tom's Hardware: SKH CEO缺到2030", "url": "https://www.tomshardware.com/pc-components/dram/sk-hynix-says-2027-will-be-the-worst-year-for-memory-shortage-forecasts-crunch-to-last-until-2030-ceo-shares-grim-outlook-on-the-day-sk-hynix-gets-listed-on-nasdaq"},
-        {"title": "Yahoo: 短缺2028前难解", "url": "https://finance.yahoo.com/technology/articles/tech-experts-warn-memory-shortage-024010093.html"}
+        {
+          "title": "SK Hynix rises 13% in Nasdaq debut - CNBC",
+          "url": "https://www.cnbc.com/2026/07/10/sk-hynix-skhy-stock-nasdaq.html"
+        },
+        {
+          "title": "SK Hynix says 2027 will be the 'worst year' for memory shortage - Tom's Hardware",
+          "url": "https://www.tomshardware.com/pc-components/dram/sk-hynix-says-2027-will-be-the-worst-year-for-memory-shortage-forecasts-crunch-to-last-until-2030-ceo-shares-grim-outlook-on-the-day-sk-hynix-gets-listed-on-nasdaq"
+        },
+        {
+          "title": "How SK Hynix just pulled off the second-largest U.S. share sale - Fortune",
+          "url": "https://fortune.com/2026/07/11/sk-hynix-us-stock-listing-nasdaq-second-largest-us-share-sale-ai-boom-hbw-memory/"
+        }
       ]
     }
   ],
-  "comment": "总温度53°：过热中期。需求引擎与现货价仍支撑上行，判断尚未到顶；但设备订单（80）与叙事（85）两个长领先指标双双亮红灯，按12–18个月传导，2027年中起风险窗口逐步打开。未来两季关键观察：现货价是否由横盘转跌、云厂商Q3财报capex指引措辞是否松动。若信号①升至50以上且④出现下调，应视为拐点前6个月的组合确认。",
+  "comment": "本期总温度约58，较上期53继续小幅升温。设备订单(80→88)与叙事一致性(85→90)双双进一步走高，核心驱动是SK海力士265亿美元纳斯达克IPO+CXMT43亿美元科创板上市同周落地，叠加三星/SK海力士5170亿韩元级新厂公告与美光新厂动工，資本开支竞赛与\"缺货到2030\"叙事同步升级，接近顶部区间。现货vs合约(30→42)出现降温迹象——DDR4现货年内首次下跌5%，Q3合约涨幅大幅收窄；需求引擎(35→32)基本持平，四大云厂资本开支仍在上调但ROI质疑声增多；下游库存(50→52)基本持平，консumer端SSD库存开始堆积但服务器端仍紧俏。下周最应盯：SK海力士(7/29)与三星(7/30)Q2财报中的资本开支与HBM供给指引，以及DDR4现货是否延续下跌验证\"连续4周\"信号。",
   "history": [
-    {"date": "2026-07-13", "s": [30, 80, 50, 35, 85], "total": 53, "note": "现货未倒挂但成交转清淡；设备capex与叙事端双红灯"}
+    {
+      "date": "2026-07-13",
+      "s": [
+        30,
+        80,
+        50,
+        35,
+        85
+      ],
+      "total": 53,
+      "note": "现货未倒挂但成交转清淡；设备capex与叙事端双红灯"
+    },
+    {
+      "date": "2026-07-17",
+      "s": [
+        42,
+        88,
+        52,
+        32,
+        90
+      ],
+      "total": 58,
+      "note": "设备订单与叙事双创新高，现货首现松动，总温度58偏热。"
+    }
   ],
   "disclaimer": "本页面为个人研究用途的公开信息聚合，由程序按固定规则自动生成，可能存在错误或延迟，不构成任何投资建议。"
 }
