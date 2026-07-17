@@ -44,9 +44,9 @@
       <view class="reading" wx:if="{{s.open}}">
         <text>{{s.reading}}</text>
         <view class="src-list">
-          <view class="src" wx:for="{{s.sources}}" wx:key="url" wx:for-item="src"
-                bindtap="copyUrl" data-url="{{src.url}}">
-            🔗 {{src.title}} <text class="copy-hint">点按复制链接</text>
+          <view class="src" wx:for="{{s.sources}}" wx:key="url" wx:for-item="src">
+            <view>🔗 {{src.title}}</view>
+            <text class="src-url" user-select="{{true}}">{{src.url}}</text>
           </view>
         </view>
       </view>

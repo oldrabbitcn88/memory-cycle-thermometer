@@ -74,13 +74,6 @@ Page({
     this.setData({ ['sig[' + i + '].open']: !this.data.sig[i].open });
   },
 
-  copyUrl(e) {
-    const url = e.currentTarget.dataset.url;
-    wx.setClipboardData({
-      data: url,
-      success: () => wx.showToast({ title: '链接已复制', icon: 'none' })
-    });
-  },
 
   // 历史总温度折线（Canvas 2D）
   drawChart(hist) {

@@ -58,7 +58,7 @@
   font-size: 23rpx; color: #2563eb; padding: 8rpx 0;
   border-top: 1rpx dashed #e5e7eb;
 }
-.copy-hint { color: #9ca3af; font-size: 20rpx; margin-left: 8rpx; }
+.src-url { color: #9ca3af; font-size: 20rpx; word-break: break-all; display: block; margin-top: 2rpx; }
 .fold-hint { font-size: 22rpx; color: #9ca3af; margin-top: 6rpx; }
 
 /* ===== 历史 ===== */
