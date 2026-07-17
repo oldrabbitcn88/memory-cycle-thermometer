@@ -98,7 +98,7 @@ def call_claude(history: list) -> dict:
         "messages": [{"role": "user", "content": build_prompt(history)}],
     }
     r = requests.post(
-        "https://api.anthropic.com/v1/messages",
+        "https://gw.claudeapi.com/v1/messages",
         headers={
             "x-api-key": ANTHROPIC_API_KEY,
             "anthropic-version": "2023-06-01",
