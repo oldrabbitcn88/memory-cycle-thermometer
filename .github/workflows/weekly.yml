@@ -21,13 +21,13 @@ jobs:
           python-version: "3.11"
 
       - name: 安装依赖
-        run: pip install requests
+        run: pip install anthropic tencentcloud-sdk-python cos-python-sdk-v5
 
       - name: 打分并上传云开发存储
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          WX_APPID: ${{ secrets.WX_APPID }}
-          WX_SECRET: ${{ secrets.WX_SECRET }}
+          TCB_SECRET_ID: ${{ secrets.TCB_SECRET_ID }}
+          TCB_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
           TCB_ENV: ${{ secrets.TCB_ENV }}
         run: python scripts/update.py
 
