@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-存储周期温度计 · 每周更新脚本
-流程：调 Claude API（开 web search）按固定规则给 5 个信号打分
-     → 本地重算加权总分（不信任模型算术）→ 校验来源链接
-     → 追加真实历史 → 生成 data/data.json → 上传微信云开发存储。
+存储周期温度计 · 每周更新脚本（v2）
+- Claude 调用：官方 anthropic SDK，base_url 指向中转服务（可用 ANTHROPIC_BASE_URL 覆盖）
+- 上传：腾讯云 API 密钥（TCB_SECRET_ID/TCB_SECRET_KEY）直传云开发 Storage 底层 COS 桶
+- 小程序端改用 wx.request 拉取公开下载域名上的 data.json
 密钥全部来自环境变量（GitHub Secrets），本脚本及产出物中不含任何密钥。
 """
 import json
@@ -13,18 +13,25 @@ import re
 import sys
 import datetime
 
-import requests
+# ---------- 环境变量与启动检查 ----------
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+if not ANTHROPIC_API_KEY:
+    sys.exit("[错误] 环境变量 ANTHROPIC_API_KEY 为空，请在 GitHub Secrets 中配置")
+
+ANTHROPIC_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://gw.claudeapi.com").strip()
+TCB_SECRET_ID = os.environ.get("TCB_SECRET_ID", "").strip()
+TCB_SECRET_KEY = os.environ.get("TCB_SECRET_KEY", "").strip()
+TCB_ENV = os.environ.get("TCB_ENV", "").strip()
+if not (TCB_SECRET_ID and TCB_SECRET_KEY and TCB_ENV):
+    sys.exit("[错误] TCB_SECRET_ID / TCB_SECRET_KEY / TCB_ENV 不能为空")
+
+MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
+CLOUD_PATH = os.environ.get("CLOUD_PATH", "data.json")
+TCB_API_REGION = os.environ.get("TCB_API_REGION", "ap-shanghai")  # tcb 接口接入地域
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HISTORY_PATH = os.path.join(ROOT, "data", "history.json")
 DATA_PATH = os.path.join(ROOT, "data", "data.json")
-
-ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
-WX_APPID = os.environ["WX_APPID"]
-WX_SECRET = os.environ["WX_SECRET"]
-TCB_ENV = os.environ["TCB_ENV"]
-MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
-CLOUD_PATH = os.environ.get("CLOUD_PATH", "data.json")  # 云存储中的文件路径
 
 WEIGHTS = [0.25, 0.20, 0.20, 0.20, 0.15]
 SIGNALS_META = [
@@ -91,29 +98,25 @@ def build_prompt(history: list) -> str:
 
 
 def call_claude(history: list) -> dict:
-    body = {
-        "model": MODEL,
-        "max_tokens": 8000,
-        "tools": [{"type": "web_search_20250305", "name": "web_search", "max_uses": 12}],
-        "messages": [{"role": "user", "content": build_prompt(history)}],
-    }
-    r = requests.post(
-        "https://gw.claudeapi.com/v1/messages",
-        headers={
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
-        json=body,
-        timeout=900,
+    """官方 anthropic SDK + 中转 base_url。保留 web_search 工具与 JSON 解析逻辑。"""
+    import anthropic
+
+    client = anthropic.Anthropic(
+        api_key=ANTHROPIC_API_KEY,
+        base_url=ANTHROPIC_BASE_URL,
+        timeout=900.0,
     )
-    r.raise_for_status()
-    text = "".join(
-        b.get("text", "") for b in r.json().get("content", []) if b.get("type") == "text"
+    msg = client.messages.create(
+        model=MODEL,
+        max_tokens=8000,
+        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 12}],
+        messages=[{"role": "user", "content": build_prompt(history)}],
     )
+    text = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text")
     m = re.search(r"\{.*\}", text, re.S)
     if not m:
-        sys.exit(f"[错误] 模型未返回 JSON，原文前 2000 字：\n{text[:2000]}")
+        sys.exit(f"[错误] 模型未返回 JSON（若中转网关不支持 web_search 服务端工具，"
+                 f"请把 ANTHROPIC_BASE_URL 设为官方 https://api.anthropic.com 并使用官方 key）。原文前 2000 字：\n{text[:2000]}")
     return json.loads(m.group(0))
 
 
@@ -135,40 +138,40 @@ def validate(result: dict) -> list:
     return sigs
 
 
-def wx_upload(content: bytes):
-    """上传 data.json 到微信云开发存储（同路径覆盖，fileID 恒定不变）。"""
-    tok = requests.get(
-        "https://api.weixin.qq.com/cgi-bin/token",
-        params={"grant_type": "client_credential", "appid": WX_APPID, "secret": WX_SECRET},
-        timeout=30,
-    ).json()
-    if "access_token" not in tok:
-        sys.exit(f"[错误] 获取 access_token 失败：{tok}（检查 WX_APPID/WX_SECRET，"
-                 f"并确认小程序后台未开启 IP 白名单，或白名单含 Actions 出口 IP）")
-    up = requests.post(
-        f"https://api.weixin.qq.com/tcb/uploadfile?access_token={tok['access_token']}",
-        json={"env": TCB_ENV, "path": CLOUD_PATH},
-        timeout=30,
-    ).json()
-    if up.get("errcode", 0) != 0:
-        sys.exit(f"[错误] 获取上传链接失败：{up}（检查 TCB_ENV 环境 ID）")
-    resp = requests.post(
-        up["url"],
-        files={
-            "key": (None, CLOUD_PATH),
-            "Signature": (None, up["authorization"]),
-            "x-cos-security-token": (None, up["token"]),
-            "x-cos-meta-fileid": (None, up["cos_file_id"]),
-            "file": (CLOUD_PATH, content, "application/json"),
-        },
-        timeout=60,
+def tcb_upload(content: bytes):
+    """用腾讯云 API 密钥上传到云开发 Storage 底层 COS 桶，并打印公开访问 URL。
+    「所有用户可读」在云开发控制台→存储→权限设置里配置（一次性操作）。
+    建议使用仅授予 TCB+COS 权限的子账号密钥，勿用主账号密钥。"""
+    from tencentcloud.common import credential
+    from tencentcloud.tcb.v20180608 import tcb_client, models
+    from qcloud_cos import CosConfig, CosS3Client
+
+    cred = credential.Credential(TCB_SECRET_ID, TCB_SECRET_KEY)
+    tcb = tcb_client.TcbClient(cred, TCB_API_REGION)
+    req = models.DescribeEnvsRequest()
+    req.EnvId = TCB_ENV
+    resp = tcb.DescribeEnvs(req)
+    envs = [e for e in (resp.EnvList or []) if e.EnvId == TCB_ENV]
+    if not envs or not envs[0].Storages:
+        sys.exit(f"[错误] 未找到环境 {TCB_ENV} 或其存储信息（检查 TCB_ENV 与密钥权限）")
+    st = envs[0].Storages[0]  # Region / Bucket / CdnDomain
+
+    cos = CosS3Client(CosConfig(Region=st.Region, SecretId=TCB_SECRET_ID, SecretKey=TCB_SECRET_KEY))
+    cos.put_object(
+        Bucket=st.Bucket,
+        Key=CLOUD_PATH,
+        Body=content,
+        ContentType="application/json; charset=utf-8",
+        CacheControl="max-age=300",
     )
-    if resp.status_code not in (200, 204):
-        sys.exit(f"[错误] COS 上传失败：HTTP {resp.status_code} {resp.text[:500]}")
-    print("=" * 60)
-    print("上传成功。小程序端 config.js 需要的 fileID（恒定不变，只需配置一次）：")
-    print(f"  {up['file_id']}")
-    print("=" * 60)
+    url = f"https://{st.CdnDomain}/{CLOUD_PATH}"
+    print("=" * 64)
+    print("上传成功。小程序端 config.js 需要的 dataUrl（恒定不变，只需配置一次）：")
+    print(f"  {url}")
+    print("请确认两件事（均为一次性配置）：")
+    print("  1) 云开发控制台→存储→权限设置：改为「所有用户可读，仅创建者可读写」")
+    print(f"  2) 小程序后台→开发设置→request合法域名：添加 https://{st.CdnDomain}")
+    print("=" * 64)
 
 
 def main():
@@ -197,7 +200,7 @@ def main():
         "weights": WEIGHTS,
         "signals": [
             {**meta, "weight": WEIGHTS[i], "score": sigs[i]["score"],
-         "reading": sigs[i]["reading"], "sources": sigs[i]["sources"]}
+             "reading": sigs[i]["reading"], "sources": sigs[i]["sources"]}
             for i, meta in enumerate(SIGNALS_META)
         ],
         "comment": result.get("comment", ""),
@@ -213,7 +216,7 @@ def main():
         f.write(payload)
 
     print(f"本期读数 {today}：signals={scores} total={total} 阶段={stage}")
-    wx_upload(payload)
+    tcb_upload(payload)
 
 
 if __name__ == "__main__":
