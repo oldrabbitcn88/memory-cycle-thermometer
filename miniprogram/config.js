@@ -6,5 +6,5 @@ module.exports = {
   // 形如 https://7878-xxx-4gxxxxxx-1234567890.tcb.qcloud.la/data.json
   // 同路径覆盖上传，地址恒定，只需配置一次。
   // 别忘了把该域名（https://开头到 .la 为止）添加到小程序后台 request 合法域名。
-  dataUrl: 'https://your-cdn-domain.tcb.qcloud.la/data.json'
+  dataUrl: 'https://636c-cloud1-d0gupqux381b96d12-1455136845.tcb.qcloud.la/data.json'
 };
