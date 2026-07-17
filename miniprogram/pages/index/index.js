@@ -31,17 +31,25 @@ Page({
 
   fetch(done) {
     this.setData({ loading: true, err: '' });
-    wx.cloud.downloadFile({ fileID: cfg.fileID })
-      .then(res => {
-        const fs = wx.getFileSystemManager();
-        fs.readFile({
-          filePath: res.tempFilePath,
-          encoding: 'utf-8',
-          success: r => { this.render(JSON.parse(r.data)); done && done(); },
-          fail: e => { this.fail('读取文件失败: ' + e.errMsg); done && done(); }
-        });
-      })
-      .catch(e => { this.fail('下载失败（检查 config.js 的 env / fileID）: ' + (e.errMsg || e)); done && done(); });
+    wx.request({
+      // 加时间戳绕过 CDN 缓存，确保拿到最新一期
+      url: cfg.dataUrl + '?t=' + Date.now(),
+      method: 'GET',
+      dataType: 'json',
+      success: res => {
+        if (res.statusCode !== 200) {
+          this.fail('HTTP ' + res.statusCode + '（403 多为云存储权限未设为「所有用户可读」）');
+        } else {
+          const d = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+          this.render(d);
+        }
+        done && done();
+      },
+      fail: e => {
+        this.fail('请求失败（检查 config.js 的 dataUrl，及该域名是否已加入 request 合法域名）: ' + e.errMsg);
+        done && done();
+      }
+    });
   },
 
   fail(msg) { this.setData({ loading: false, err: msg }); },
