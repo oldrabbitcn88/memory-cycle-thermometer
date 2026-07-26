@@ -97,8 +97,23 @@ def build_prompt(history: list) -> str:
 硬性要求：每个信号至少 1 条 sources 且 url 必须来自你本次搜索到的真实网页，严禁编造链接；打分只依据搜到的事实，找不到新信息的维度沿用上期分数并在 reading 中注明"本期无增量信息"。"""
 
 
+def extract_json(text: str):
+    """从模型输出中稳健提取 JSON 对象：
+    优先扫描每个 '{' 起点用 raw_decode 尝试解析（正确处理字符串内的大括号），
+    只接受含 signals 键的 dict，避免误抓正文/错误信息里的大括号片段。"""
+    dec = json.JSONDecoder()
+    for mm in re.finditer(r"\{", text):
+        try:
+            obj, _ = dec.raw_decode(text[mm.start():])
+        except ValueError:
+            continue
+        if isinstance(obj, dict) and "signals" in obj:
+            return obj
+    return None
+
+
 def call_claude(history: list) -> dict:
-    """官方 anthropic SDK + 中转 base_url。保留 web_search 工具与 JSON 解析逻辑。"""
+    """官方 anthropic SDK + 中转 base_url。带重试与诊断输出。"""
     import anthropic
 
     client = anthropic.Anthropic(
@@ -106,18 +121,48 @@ def call_claude(history: list) -> dict:
         base_url=ANTHROPIC_BASE_URL,
         timeout=900.0,
     )
-    msg = client.messages.create(
-        model=MODEL,
-        max_tokens=8000,
-        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 12}],
-        messages=[{"role": "user", "content": build_prompt(history)}],
-    )
-    text = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text")
-    m = re.search(r"\{.*\}", text, re.S)
-    if not m:
-        sys.exit(f"[错误] 模型未返回 JSON（若中转网关不支持 web_search 服务端工具，"
-                 f"请把 ANTHROPIC_BASE_URL 设为官方 https://api.anthropic.com 并使用官方 key）。原文前 2000 字：\n{text[:2000]}")
-    return json.loads(m.group(0))
+    prompt = build_prompt(history)
+    last_text = ""
+    for attempt in range(1, 4):
+        print(f"[信息] 调用模型，第 {attempt}/3 次尝试 ...")
+        try:
+            msg = client.messages.create(
+                model=MODEL,
+                max_tokens=8000,
+                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 12}],
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except Exception as e:
+            print(f"[警告] 第 {attempt} 次 API 调用异常：{e}")
+            continue
+
+        # 诊断：本次响应有没有真的联网搜索
+        searched = any(
+            getattr(b, "type", "") in ("server_tool_use", "web_search_tool_result")
+            for b in msg.content
+        )
+        if not searched:
+            print("[警告] 本次响应中没有任何联网搜索记录——中转网关可能未执行/不支持 "
+                  "web_search 服务端工具，结果可信度存疑")
+
+        last_text = "".join(
+            b.text for b in msg.content if getattr(b, "type", "") == "text"
+        )
+        print(f"[信息] stop_reason={msg.stop_reason}，文本长度={len(last_text)}，联网搜索={searched}")
+
+        obj = extract_json(last_text)
+        if obj is not None:
+            if not searched and attempt < 3:
+                # 没搜索的结果视为不可信，重试
+                print("[信息] 无搜索记录的结果不予采用，重试 ...")
+                continue
+            return obj
+        print(f"[警告] 第 {attempt} 次未能解析出合法 JSON，原文前 500 字：\n{last_text[:500]}")
+
+    sys.exit("[错误] 连续 3 次未获得含 signals 的合法 JSON。完整原文如下（前 3000 字），"
+             "若始终无搜索记录/非 JSON，多为中转网关不支持 web_search 或不稳定，"
+             "建议将 ANTHROPIC_BASE_URL 设为官方 https://api.anthropic.com 并改用官方 key：\n"
+             + last_text[:3000])
 
 
 def validate(result: dict) -> list:
