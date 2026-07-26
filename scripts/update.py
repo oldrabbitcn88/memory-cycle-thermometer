@@ -26,6 +26,7 @@ if not (TCB_SECRET_ID and TCB_SECRET_KEY and TCB_ENV):
     sys.exit("[错误] TCB_SECRET_ID / TCB_SECRET_KEY / TCB_ENV 不能为空")
 
 MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
+MAX_TOKENS = int(os.environ.get("CLAUDE_MAX_TOKENS", "20000"))  # 搜索结果计入输出token，需留足余量
 CLOUD_PATH = os.environ.get("CLOUD_PATH", "data.json")
 TCB_API_REGION = os.environ.get("TCB_API_REGION", "ap-shanghai")  # tcb 接口接入地域
 
@@ -87,10 +88,10 @@ def build_prompt(history: list) -> str:
 四、只输出一个 JSON 对象（不要输出任何其他文字、不要用代码块包裹），结构如下：
 {{
   "signals": [
-    {{"score": <0-100整数>, "reading": "<80-150字中文本期读数，含关键数字>", "sources": [{{"title": "<来源名>", "url": "<真实URL>"}}]}},
+    {{"score": <0-100整数>, "reading": "<60-100字中文本期读数，含关键数字>", "sources": [{{"title": "<来源名>", "url": "<真实URL>"}} 最多2条]}},
     ... 共5项，严格按上面1-5的顺序 ...
   ],
-  "comment": "<150-250字本期点评：与上期相比哪些信号升温/降温、下周最该盯什么>",
+  "comment": "<100-180字本期点评：与上期相比哪些信号升温/降温、下周最该盯什么>",
   "note": "<一句话本期摘要，30字以内>"
 }}
 
@@ -128,8 +129,8 @@ def call_claude(history: list) -> dict:
         try:
             msg = client.messages.create(
                 model=MODEL,
-                max_tokens=8000,
-                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 12}],
+                max_tokens=MAX_TOKENS,
+                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as e:
@@ -149,6 +150,10 @@ def call_claude(history: list) -> dict:
             b.text for b in msg.content if getattr(b, "type", "") == "text"
         )
         print(f"[信息] stop_reason={msg.stop_reason}，文本长度={len(last_text)}，联网搜索={searched}")
+
+        if msg.stop_reason == "max_tokens":
+            print(f"[警告] 输出被 max_tokens={MAX_TOKENS} 截断——JSON 大概率不完整。"
+                  "若反复出现，请在仓库 Variables 中调大 CLAUDE_MAX_TOKENS")
 
         obj = extract_json(last_text)
         if obj is not None:
