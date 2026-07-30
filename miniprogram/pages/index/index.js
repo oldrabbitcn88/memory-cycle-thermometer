@@ -6,6 +6,15 @@ const colorOf = v => v<30?C.g : v<50?C.l : v<70?C.a : C.r;
 Page({
   data:{ loading:true, err:'', d:null, sig:[], topColor:'', botColor:'', tab:'weekly' },
   onLoad(){ this.fetch(); },
+
+  // 开启右上角「转发给好友/群」。缺这个函数，微信会直接禁用转发入口。
+  onShareAppMessage(){
+    const d = this.data.d;
+    return {
+      title: d ? `存储周期温度计 · 顶温${d.top}° ${d.phase}` : '存储周期温度计',
+      path: '/pages/index/index'
+    };
+  },
   onPullDownRefresh(){ this.fetch(()=>wx.stopPullDownRefresh()); },
 
   fetch(done){
