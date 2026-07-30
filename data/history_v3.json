@@ -749,33 +749,6 @@
   0,
   4
  ],
- "last_metrics": {
-  "capex": {
-   "yoy_pct": 40,
-   "new_fabs": 4,
-   "new_entrant": true,
-   "asof": "2026-07-06"
-  },
-  "inventory": {
-   "weeks": 3.5,
-   "lta": true,
-   "sellout": true,
-   "cancel": false,
-   "asof": "2026-07-08"
-  },
-  "demand": {
-   "n_cutting": 0,
-   "peaked": false,
-   "doubt": true,
-   "asof": "2026-07-03"
-  },
-  "narrative": {
-   "years_out": 4.0,
-   "bears": 1,
-   "mega": true,
-   "asof": "2026-07-12"
-  }
- },
  "last_metrics_mapped": [
   {
    "premium_pct": 120.0,
@@ -808,5 +781,11 @@
    "asof": "2026-07-12"
   }
  ],
- "last_phase": "扩张期"
+ "last_phase": "扩张期",
+ "last_quarterly_asof": {
+  "capex": "2026-07-06",
+  "inventory": "2026-07-08",
+  "demand": "2026-07-03",
+  "narrative": "2026-07-12"
+ }
 }

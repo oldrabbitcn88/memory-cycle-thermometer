@@ -1,29 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-存储周期温度计 · 每周更新（v3 新口径）
-模型只负责【提取原始指标】，分数由 scoring.py 机械映射——模型不再打分。
-季度类指标带 asof 新鲜度控制：发布日未变则沿用上期，杜绝无信息期的虚假微调。
-"""
-import json, os, re, sys, datetime
-import scoring as sc
+存储周期温度计 · 每周更新（v3.1）
 
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-if not ANTHROPIC_API_KEY:
-    sys.exit("[错误] ANTHROPIC_API_KEY 为空")
-BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://gw.claudeapi.com").strip()
+架构变更（因中转网关的 web_search 实现不可用而重构）：
+  第一层 确定性抓取：现货价、股价锚 —— 由 fetcher.py 正则解析，不经过任何 LLM。
+                     这两项是唯一按周变动的指标，也是主触发器的判据，必须可靠。
+  第二层 人工维护：季度类指标读 data/quarterly_inputs.json。它们本就按季更新，
+                   自动抓取的误判风险远大于收益。
+  第三层 可选点评：LLM 仅生成一句话摘要，失败不影响出分（且不依赖搜索能力）。
+分数全部由 scoring.py 机械映射，任何一层都不参与打分。
+"""
+import json, os, sys, datetime
+import scoring as sc
+import fetcher
+
 TCB_ID  = os.environ.get("TCB_SECRET_ID", "").strip()
 TCB_KEY = os.environ.get("TCB_SECRET_KEY", "").strip()
 TCB_ENV = os.environ.get("TCB_ENV", "").strip()
 if not (TCB_ID and TCB_KEY and TCB_ENV):
     sys.exit("[错误] TCB_SECRET_ID / TCB_SECRET_KEY / TCB_ENV 不能为空")
-MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
-MAX_TOKENS = int(os.environ.get("CLAUDE_MAX_TOKENS", "20000"))
 CLOUD_PATH = os.environ.get("CLOUD_PATH", "data.json")
 TCB_REGION = os.environ.get("TCB_API_REGION", "ap-shanghai")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HIST = os.path.join(ROOT, "data", "history_v3.json")
+QIN  = os.path.join(ROOT, "data", "quarterly_inputs.json")
 OUT  = os.path.join(ROOT, "data", "data.json")
 
 NAMES = ["现货价 vs 合约价", "设备商存储订单", "下游库存与囤货", "需求引擎(AI capex)", "卖方一致性与话术"]
@@ -35,82 +37,60 @@ def bj_today():
     return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime("%Y-%m-%d")
 
 
-PROMPT = """你是数据提取员，**不要打分、不要给结论**。今天是 {today}。请联网检索并只回填下列原始指标。
-
-上期已知指标（若本期查不到更新的数据，把 asof 原样保留，数值也原样保留）：
-{prev}
-
-需要提取：
-1. TrendForce 主流 DDR4 1Gx8 3200MT/s 现货价：最新一期与前一期的美元价格及各自日期
-2. 现货连续下跌周数（若在上涨则填 0）
-3. 存储厂 capex 同比增速%、在建或已宣布新 fab 数、是否有新玩家(CXMT等)扩产，及数据发布日
-4. 下游/渠道库存周数、是否存在长约锁量、是否有"售罄"话术、是否出现砍单或毁约，及数据发布日
-5. 云厂商中明确削减或推迟资本开支的家数、增速是否见顶、是否出现回报率质疑，及数据发布日
-6. 管理层短缺预测覆盖年数（如"缺到2030"则从今年起算）、公开看空方数量、是否有龙头上市/巨额融资，及数据发布日
-7. Roundhill Memory ETF (代码 DRAM) 最新收盘价与其52周高点
-
-只输出一个 JSON，不要代码块包裹：
-{{"spot":{{"latest_date":"YYYY-MM-DD","latest":<美元数>,"prev_date":"YYYY-MM-DD","prev":<美元数>,"weeks_down":<整数>,"at_record":<true/false>}},
- "capex":{{"yoy_pct":<数>,"new_fabs":<整数>,"new_entrant":<bool>,"asof":"YYYY-MM-DD"}},
- "inventory":{{"weeks":<数>,"lta":<bool>,"sellout":<bool>,"cancel":<bool>,"asof":"YYYY-MM-DD"}},
- "demand":{{"n_cutting":<整数>,"peaked":<bool>,"doubt":<bool>,"asof":"YYYY-MM-DD"}},
- "narrative":{{"years_out":<数>,"bears":<整数>,"mega":<bool>,"asof":"YYYY-MM-DD"}},
- "equity":{{"price":<数>,"high_52w":<数>,"asof":"YYYY-MM-DD"}},
- "sources":[{{"title":"<来源名>","url":"<真实URL>"}}],
- "note":"<30字内本期要点，只陈述事实不做判断>"}}
-
-硬性要求：所有 url 必须来自本次真实检索，严禁编造；查不到的字段沿用上期值并保持其 asof 不变。"""
-
-
-def call_model(prev_metrics):
-    import anthropic
-    cli = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, base_url=BASE_URL, timeout=900.0)
-    p = PROMPT.format(today=bj_today(), prev=json.dumps(prev_metrics, ensure_ascii=False, indent=1))
-    last = ""
-    for a in range(1, 4):
-        print(f"[信息] 提取指标，第 {a}/3 次 ...")
-        try:
-            msg = cli.messages.create(model=MODEL, max_tokens=MAX_TOKENS,
-                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
-                messages=[{"role": "user", "content": p}])
-        except Exception as e:
-            print(f"[警告] API 异常：{e}"); continue
-        searched = any(getattr(b, "type", "") in ("server_tool_use", "web_search_tool_result") for b in msg.content)
-        last = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text")
-        print(f"[信息] stop={msg.stop_reason} 长度={len(last)} 联网={searched}")
-        dec = json.JSONDecoder()
-        for mm in re.finditer(r"\{", last):
-            try: obj, _ = dec.raw_decode(last[mm.start():])
-            except ValueError: continue
-            if isinstance(obj, dict) and "spot" in obj and "capex" in obj:
-                if not searched and a < 3:
-                    print("[信息] 无联网记录，结果不采用，重试"); break
-                return obj
-        print(f"[警告] 第 {a} 次未解析出指标 JSON")
-    sys.exit(f"[错误] 三次均失败。原文前2000字：\n{last[:2000]}")
+def optional_note(scores, spot, eq):
+    """可选：LLM 一句话摘要。任何失败都静默降级为规则生成的摘要。"""
+    fallback = (f"现货${spot['latest']}（{'创新高' if spot['at_record'] else '未创新高'}），"
+                f"连跌{spot['weeks_down']}周；股价距高点{eq['drawdown_pct']}%" if eq else
+                f"现货${spot['latest']}，连跌{spot['weeks_down']}周")
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if not key or os.environ.get("DISABLE_LLM_NOTE") == "1":
+        return fallback
+    try:
+        import anthropic
+        cli = anthropic.Anthropic(api_key=key,
+                                  base_url=os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
+                                  timeout=120.0)
+        msg = cli.messages.create(
+            model=os.environ.get("CLAUDE_MODEL", "claude-sonnet-5"), max_tokens=300,
+            messages=[{"role": "user", "content":
+                f"存储周期监测本期数据：五信号分数{scores}（越高越接近周期顶部），"
+                f"现货${spot['latest']}较上期${spot['prev']}，连续下跌{spot['weeks_down']}周，"
+                f"{'创历史新高' if spot['at_record'] else '未创新高'}；"
+                f"存储股ETF距高点{eq['drawdown_pct'] if eq else 'NA'}%。"
+                f"用一句话（40字内）陈述本期最值得注意的事实，只陈述不判断，不要任何前后缀。"}])
+        t = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text").strip()
+        return t[:80] if t else fallback
+    except Exception as e:
+        print(f"[提示] LLM 点评不可用（不影响出分）：{e}")
+        return fallback
 
 
 def main():
     hist = json.load(open(HIST, encoding="utf-8"))
-    prev_metrics = hist.get("last_metrics", {})
-    ex = call_model(prev_metrics)
+    qin = json.load(open(QIN, encoding="utf-8"))
 
-    if not [s for s in ex.get("sources", []) if str(s.get("url","")).startswith("http")]:
-        sys.exit("[错误] 无真实来源链接，拒绝发布")
+    # --- 第一层：确定性抓取 ---
+    spot = fetcher.fetch_spot()
+    eq_raw = fetcher.fetch_equity()
+    print(f"[抓取] 现货 {spot['latest_date']} ${spot['latest']}（上期 {spot['prev_date']} ${spot['prev']}）"
+          f" 连跌{spot['weeks_down']}周 序列{spot['series_len']}条")
+    print(f"[抓取] 股价锚 {eq_raw}")
 
-    sp = ex["spot"]
-    wow = (sp["latest"] / sp["prev"] - 1) * 100 if sp.get("prev") else 0.0
+    wow = (spot["latest"] / spot["prev"] - 1) * 100 if spot.get("prev") else 0.0
+
+    # --- 第二层：季度指标（人工维护，带新鲜度标记）---
+    clean = lambda d: {k: v for k, v in d.items() if not k.startswith("_")}
     metrics = [
-        {"premium_pct": 120.0, "wow_pct": round(wow, 2), "weeks_down": int(sp.get("weeks_down", 0))},
-        ex["capex"], ex["inventory"], ex["demand"], ex["narrative"],
+        {"premium_pct": 120.0, "wow_pct": round(wow, 2), "weeks_down": spot["weeks_down"]},
+        clean(qin["capex"]), clean(qin["inventory"]), clean(qin["demand"]), clean(qin["narrative"]),
     ]
-    # 数据新鲜度：季度指标 asof 未变则视为无增量（分数自然不变，此处仅作标注）
-    fresh = {NAMES[i+1]: (ex[k].get("asof") != (prev_metrics.get(k, {}) or {}).get("asof"))
-             for i, k in enumerate(["capex", "inventory", "demand", "narrative"])}
+    prev_q = hist.get("last_quarterly_asof", {})
+    fresh = {NAMES[i+1]: (qin[k].get("asof") != prev_q.get(k)) for i, k in
+             enumerate(["capex", "inventory", "demand", "narrative"])}
 
+    # --- 打分（机械映射）---
     scores = sc.score_all(metrics)
-    streak = hist.get("streak_carryover", [0]*5)
-    streak = sc.update_streak(streak, scores)
+    streak = sc.update_streak(hist.get("streak_carryover", [0]*5), scores)
     phase = sc.next_phase(hist.get("last_phase", "扩张期"), scores)
     r = sc.compose(scores, sc.decay_factors(streak), phase)
 
@@ -119,29 +99,35 @@ def main():
     prev_m = hist.get("last_metrics_mapped")
     b = sc.bottom_score(scores, prev_s, metrics, prev_m) if prev_s and prev_m else {"total": 0}
 
-    eq = sc.equity_anchor(ex["equity"]["price"], ex["equity"]["high_52w"], sp.get("at_record", False))
+    eq = sc.equity_anchor(eq_raw["price"], eq_raw["high_52w"], spot["at_record"]) if eq_raw else None
+    if eq: eq.update(eq_raw)
+
+    note = optional_note(scores, spot, eq)
     today = bj_today()
 
     entry = {"period": today, "s": scores, "top": r["total"], "bottom": b["total"],
              "phase": phase, "n50": r["n50"], "n75": r["n75"], "trig": bool(r["triggers"]),
-             "conf": "high", "kind": "周度实测", "spot": sp["latest"], "wow": round(wow, 2),
-             "note": ex.get("note", "")}
+             "conf": "high", "kind": "周度实测", "spot": spot["latest"],
+             "wow": round(wow, 2), "note": note}
     hist["weekly"] = [w for w in wk if w["period"] != today] + [entry]
     hist["streak_carryover"] = streak
     hist["last_phase"] = phase
-    hist["last_metrics"] = {k: ex[k] for k in ("capex", "inventory", "demand", "narrative")}
+    hist["last_quarterly_asof"] = {k: qin[k].get("asof") for k in
+                                   ("capex", "inventory", "demand", "narrative")}
     hist["last_metrics_mapped"] = metrics
-    hist["equity_anchor"] = {**ex["equity"], **eq}
+    if eq: hist["equity_anchor"] = eq
+
+    sources = [{"title": "TrendForce 现货价（经 Capital & Compute 聚合）", "url": fetcher.SRC_SPOT},
+               {"title": "TrendForce 官方现货价页", "url": "https://www.trendforce.com/price/dram/dram_spot"}]
 
     data = {
-        "updated": today, "schema": "v3", "top": r["total"], "bottom": b["total"],
+        "updated": today, "schema": "v3.1", "top": r["total"], "bottom": b["total"],
         "phase": phase, "stage": r["stage"], "stage_desc": r["stage_desc"],
         "n50": r["n50"], "n75": r["n75"], "triggers": r["triggers"],
         "signals": [{"id": i+1, "name": NAMES[i], "lead": LEADS[i], "score": scores[i],
                      "weight": sc.WEIGHTS[i], "metrics": metrics[i],
                      "fresh": fresh.get(NAMES[i], True)} for i in range(5)],
-        "equity_anchor": hist["equity_anchor"],
-        "spot": sp, "sources": ex["sources"][:8], "note": ex.get("note", ""),
+        "equity_anchor": eq or {}, "spot": spot, "sources": sources, "note": note,
         "quarterly": hist["quarterly"], "weekly": hist["weekly"],
         "disclaimer": "本页面为个人研究用途的公开信息聚合，由程序按固定规则自动生成，"
                       "季度序列为历史规则重建而非实测，可能存在错误或延迟，不构成任何投资建议。",
@@ -150,7 +136,7 @@ def main():
     payload = json.dumps(data, ensure_ascii=False, indent=1).encode("utf-8")
     open(OUT, "wb").write(payload)
     print(f"{today}: 五信号={scores} 顶温={r['total']} 底温={b['total']} 相位={phase} "
-          f"触发={r['triggers'] or '无'} 股价背离={'是' if eq['alert'] else '否'}")
+          f"触发={r['triggers'] or '无'} 股价背离={'是' if (eq and eq['alert']) else '否'}")
     upload(payload)
 
 

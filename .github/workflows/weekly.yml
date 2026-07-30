@@ -11,22 +11,28 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
+
       - name: 安装依赖
-        run: pip install anthropic tencentcloud-sdk-python cos-python-sdk-v5
-      - name: 提取指标→机械映射→上传
+        run: pip install requests tencentcloud-sdk-python cos-python-sdk-v5 anthropic
+
+      - name: 抓取 → 机械映射 → 上传
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          TCB_SECRET_ID: ${{ secrets.TCB_SECRET_ID }}
+          TCB_SECRET_ID:  ${{ secrets.TCB_SECRET_ID }}
           TCB_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
-          TCB_ENV: ${{ secrets.TCB_ENV }}
+          TCB_ENV:        ${{ secrets.TCB_ENV }}
+          # 以下均为可选：仅用于生成一句话点评，缺失或失败都不影响出分
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_BASE_URL: ${{ vars.ANTHROPIC_BASE_URL }}
         run: python scripts/update.py
-      - name: 回归自检（确保口径未漂移）
-        run: python backtest/probe.py | tail -5
+
+      - name: 回归自检（确保打分口径未漂移）
+        run: python backtest/probe.py | tail -6
+
       - name: 提交历史回仓库
         run: |
           git config user.name "thermometer-bot"
