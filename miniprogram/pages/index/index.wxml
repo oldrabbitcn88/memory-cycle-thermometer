@@ -1,83 +1,68 @@
 <view class="page">
-
   <view wx:if="{{loading}}" class="center muted">加载中…</view>
   <view wx:elif="{{err}}" class="center err">{{err}}</view>
-
   <block wx:else>
-    <!-- 顶部：温度计 + 总分 -->
-    <view class="card top">
-      <view class="thermo-col">
-        <view class="thermo">
-          <view class="marker" style="bottom: calc({{d.total}}% - 4rpx)"></view>
-        </view>
-        <view class="scale">
-          <text>100</text><text>75</text><text>50</text><text>25</text><text>0</text>
-        </view>
+
+    <view class="card duo">
+      <view class="half">
+        <view class="lbl">顶部温度</view>
+        <view class="big" style="color:{{topColor}}">{{d.top}}<text class="u">°</text></view>
+        <view class="phase" style="color:{{topColor}}">{{d.phase}}</view>
       </view>
-      <view class="stage-col">
-        <view class="score" style="color:{{totalColor}}">
-          {{d.total}}<text class="unit">/100°</text>
-          <text wx:if="{{delta !== null}}" class="delta {{delta > 0 ? 'up' : delta < 0 ? 'down' : ''}}">
-            {{delta > 0 ? '▲+' + delta : delta < 0 ? '▼' + delta : '＝0'}}
-          </text>
-        </view>
-        <view class="stage" style="color:{{totalColor}}">{{d.stage}}</view>
-        <view class="stage-desc">{{d.stage_desc}}</view>
-        <view class="updated">更新于 {{d.updated}} · 每周一自动更新 · 下拉刷新</view>
+      <view class="vline"></view>
+      <view class="half">
+        <view class="lbl">底部温度</view>
+        <view class="big" style="color:{{botColor}}">{{d.bottom}}<text class="u">°</text></view>
+        <view class="phase muted">{{d.bottom >= 60 ? '进入底部区间' : '非底部区域'}}</view>
       </view>
     </view>
 
-    <!-- 5 张信号卡 -->
+    <view class="card">
+      <view class="row"><text class="k">亮灯计数</text><text class="v">≥50 共 {{d.n50}} 盏 · ≥75 共 {{d.n75}} 盏</text></view>
+      <view class="trig" wx:if="{{d.triggers.length}}">
+        <view wx:for="{{d.triggers}}" wx:key="*this">⚠ {{item}}</view>
+      </view>
+      <view class="row" wx:else><text class="k">主触发器</text><text class="v ok">未触发</text></view>
+    </view>
+
+    <view class="card anchor {{d.equity_anchor.alert ? 'warn' : ''}}">
+      <view class="row"><text class="k">市场定价锚 · DRAM ETF</text>
+        <text class="v" style="color:{{d.equity_anchor.drawdown_pct <= -25 ? '#dc2626' : '#374151'}}">
+          {{d.equity_anchor.drawdown_pct}}%（距高点）</text></view>
+      <view class="anote">{{d.equity_anchor.note}}</view>
+    </view>
+
     <view class="card sig" wx:for="{{sig}}" wx:key="id" wx:for-item="s" wx:for-index="i">
       <view class="sig-head" bindtap="toggle" data-i="{{i}}">
         <view class="idx" style="background:{{s.color}}">{{s.id}}</view>
-        <view class="sig-title">
-          <view class="name">{{s.name}} <text class="w">权重{{s.weightPct}}%</text></view>
-          <view class="lead">{{s.lead}}</view>
+        <view class="st">
+          <view class="nm">{{s.name}} <text class="w">{{s.weightPct}}%</text>
+            <text wx:if="{{!s.fresh}}" class="stale">本期无新数据</text></view>
+          <view class="ld">{{s.lead}}</view>
         </view>
-        <view class="gauge">
-          <view class="val" style="color:{{s.color}}">{{s.score}}°</view>
-          <view class="tag" style="background:{{s.tag.bg}};color:{{s.tag.fg}}">{{s.tag.text}}</view>
-        </view>
+        <view class="val" style="color:{{s.color}}">{{s.score}}</view>
       </view>
       <view class="bar"><view class="fill" style="width:{{s.score}}%;background:{{s.color}}"></view></view>
-      <view class="reading" wx:if="{{s.open}}">
-        <text>{{s.reading}}</text>
-        <view class="src-list">
-          <view class="src" wx:for="{{s.sources}}" wx:key="url" wx:for-item="src">
-            <view>🔗 {{src.title}}</view>
-            <text class="src-url" user-select="{{true}}">{{src.url}}</text>
-          </view>
-        </view>
-      </view>
-      <view class="fold-hint" wx:else>点击展开本期读数与来源 ▾</view>
+      <view class="met">{{s.metricText}}</view>
     </view>
 
-    <!-- 历史趋势 -->
     <view class="card">
-      <view class="h2">📈 总温度趋势（真实累积 {{d.history.length}} 期）</view>
-      <canvas wx:if="{{d.history.length >= 2}}" type="2d" id="hist" class="chart"></canvas>
-      <view wx:else class="muted small">积累两期以上读数后，此处显示趋势折线</view>
-      <view class="hist-rows">
-        <view class="hist-row head">
-          <text class="c-date">日期</text><text class="c-s">①</text><text class="c-s">②</text>
-          <text class="c-s">③</text><text class="c-s">④</text><text class="c-s">⑤</text><text class="c-t">总温度</text>
-        </view>
-        <view class="hist-row" wx:for="{{d.history}}" wx:key="date" wx:for-item="h">
-          <text class="c-date">{{h.date}}</text>
-          <text class="c-s" wx:for="{{h.s}}" wx:key="*this" wx:for-item="v">{{v}}</text>
-          <text class="c-t bold">{{h.total}}°</text>
-        </view>
+      <view class="tabs">
+        <text class="tab {{tab==='weekly'?'on':''}}" bindtap="switchTab" data-t="weekly">周度实测</text>
+        <text class="tab {{tab==='quarterly'?'on':''}}" bindtap="switchTab" data-t="quarterly">季度重建(2018起)</text>
+      </view>
+      <canvas type="2d" id="ch" class="chart"></canvas>
+      <view class="legend"><text style="color:#dc2626">━ 顶部温度</text><text style="color:#16a34a">━ 底部温度</text><text class="muted">● 触发点</text></view>
+      <view class="tip" wx:if="{{tab==='quarterly'}}">季度序列为历史规则重建，非实测数据，仅供规则验证参考。</view>
+    </view>
+
+    <view class="card" wx:if="{{d.sources.length}}">
+      <view class="k" style="margin-bottom:10rpx">本期数据来源</view>
+      <view class="src" wx:for="{{d.sources}}" wx:key="url" wx:for-item="s">
+        <view>🔗 {{s.title}}</view><text class="surl" user-select="{{true}}">{{s.url}}</text>
       </view>
     </view>
 
-    <!-- 本期点评 -->
-    <view class="card">
-      <view class="h2">🧭 本期点评</view>
-      <view class="comment">{{d.comment}}</view>
-    </view>
-
-    <!-- 免责声明 -->
-    <view class="disclaimer">{{d.disclaimer}}</view>
+    <view class="disc">{{d.disclaimer}}</view>
   </block>
 </view>

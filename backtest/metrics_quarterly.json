@@ -1,0 +1,975 @@
+{
+ "_说明": "季度指标重建集。每期填入可考证的原始指标，分数由 scoring.py 机械映射得出，不手工赋分。",
+ "_置信度": "high=有明确公开记录可查; mid=方向明确但数值为区间估计; low=仅方向性判断",
+ "_免责": "本表为规则验证用的历史重建，非实测数据序列。周度序列因数据在付费墙后无法获取。",
+ "quarters": [
+  {
+   "q": "2017Q1",
+   "conf": "mid",
+   "note": "超级周期启动，现货猛涨",
+   "m": [
+    {
+     "premium_pct": 25,
+     "wow_pct": 3
+    },
+    {
+     "yoy_pct": 60,
+     "new_fabs": 1
+    },
+    {
+     "weeks": 3.5
+    },
+    {},
+    {
+     "years_out": 1.5,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2017Q2",
+   "conf": "mid",
+   "note": "涨势延续，capex同比+81%",
+   "m": [
+    {
+     "premium_pct": 28,
+     "wow_pct": 4
+    },
+    {
+     "yoy_pct": 81,
+     "new_fabs": 1
+    },
+    {
+     "weeks": 3.0
+    },
+    {},
+    {
+     "years_out": 1.5,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2017Q3",
+   "conf": "mid",
+   "note": "动能顶峰，三星创纪录利润",
+   "m": [
+    {
+     "premium_pct": 30,
+     "wow_pct": 3
+    },
+    {
+     "yoy_pct": 81,
+     "new_fabs": 2
+    },
+    {
+     "weeks": 3.5
+    },
+    {},
+    {
+     "years_out": 2.0,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2017Q4",
+   "conf": "high",
+   "note": "涨幅收窄；叙事延至2019；DRAM capex全年+81%至163亿美元",
+   "m": [
+    {
+     "premium_pct": 22,
+     "wow_pct": 1
+    },
+    {
+     "yoy_pct": 70,
+     "new_fabs": 2
+    },
+    {
+     "weeks": 4.0
+    },
+    {},
+    {
+     "years_out": 2.2,
+     "bears": 0
+    }
+   ]
+  },
+  {
+   "q": "2018Q1",
+   "conf": "high",
+   "note": "DDR4现货自年初走弱；比特币1月腰斩；capex仍+40%",
+   "m": [
+    {
+     "premium_pct": 12,
+     "wow_pct": -1,
+     "weeks_down": 3
+    },
+    {
+     "yoy_pct": 40,
+     "new_fabs": 2
+    },
+    {
+     "weeks": 5.0
+    },
+    {
+     "doubt": true
+    },
+    {
+     "years_out": 2.0,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2018Q2",
+   "conf": "high",
+   "note": "现货持续跌；矿难显性化（台积电6月营收环比-13%）；美光股价5月见顶",
+   "m": [
+    {
+     "premium_pct": 4,
+     "wow_pct": -3,
+     "weeks_down": 8
+    },
+    {
+     "yoy_pct": 40,
+     "new_fabs": 2
+    },
+    {
+     "weeks": 6.5
+    },
+    {
+     "peaked": true,
+     "doubt": true
+    },
+    {
+     "years_out": 1.5,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2018Q3",
+   "conf": "high",
+   "note": "倒挂出现；合约价见顶；安卓渠道库存高企、iPhone出货见顶",
+   "m": [
+    {
+     "premium_pct": -2,
+     "wow_pct": -4,
+     "weeks_down": 12
+    },
+    {
+     "yoy_pct": 30,
+     "new_fabs": 1
+    },
+    {
+     "weeks": 8.5
+    },
+    {
+     "n_cutting": 1,
+     "peaked": true
+    },
+    {
+     "years_out": 1.0,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2018Q4",
+   "conf": "high",
+   "note": "三星10/31砍capex 27%宣告景气结束；11月合约价两次下调；英伟达季内-54%",
+   "m": [
+    {
+     "premium_pct": -12,
+     "wow_pct": -6,
+     "weeks_down": 20
+    },
+    {
+     "yoy_pct": -27
+    },
+    {
+     "weeks": 12,
+     "cancel": true
+    },
+    {
+     "n_cutting": 2
+    },
+    {
+     "years_out": 0.5,
+     "bears": 3
+    }
+   ]
+  },
+  {
+   "q": "2019Q1",
+   "conf": "high",
+   "note": "合约价加速下跌；DRAM capex同比转负；渠道库存15周+",
+   "m": [
+    {
+     "premium_pct": -15,
+     "wow_pct": -5,
+     "weeks_down": 30
+    },
+    {
+     "yoy_pct": -30
+    },
+    {
+     "weeks": 15,
+     "cancel": true
+    },
+    {
+     "n_cutting": 2
+    },
+    {
+     "years_out": 0.5,
+     "bears": 3
+    }
+   ],
+   "production_cut": true
+  },
+  {
+   "q": "2019Q2",
+   "conf": "mid",
+   "note": "下行中段，去库存",
+   "m": [
+    {
+     "premium_pct": -10,
+     "wow_pct": -3,
+     "weeks_down": 40
+    },
+    {
+     "yoy_pct": -30
+    },
+    {
+     "weeks": 13
+    },
+    {
+     "n_cutting": 1
+    },
+    {
+     "years_out": 0.5,
+     "bears": 3
+    }
+   ],
+   "production_cut": true
+  },
+  {
+   "q": "2019Q3",
+   "conf": "mid",
+   "note": "跌幅收敛，接近底部",
+   "m": [
+    {
+     "premium_pct": -5,
+     "wow_pct": -1,
+     "weeks_down": 45
+    },
+    {
+     "yoy_pct": -30
+    },
+    {
+     "weeks": 10
+    },
+    {
+     "peaked": true
+    },
+    {
+     "years_out": 0.5,
+     "bears": 3
+    }
+   ],
+   "production_cut": true
+  },
+  {
+   "q": "2019Q4",
+   "conf": "mid",
+   "note": "筑底，现货企稳",
+   "m": [
+    {
+     "premium_pct": 1,
+     "wow_pct": 1
+    },
+    {
+     "yoy_pct": -20
+    },
+    {
+     "weeks": 7
+    },
+    {
+     "doubt": true
+    },
+    {
+     "years_out": 1.0,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2020Q1",
+   "conf": "low",
+   "note": "疫情初期，服务器需求上升消费下滑",
+   "m": [
+    {
+     "premium_pct": 5,
+     "wow_pct": 1
+    },
+    {
+     "yoy_pct": 0
+    },
+    {
+     "weeks": 7
+    },
+    {
+     "peaked": true
+    },
+    {
+     "years_out": 1.0,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2020Q2",
+   "conf": "low",
+   "note": "疫情居家拉动服务器，短暂回暖",
+   "m": [
+    {
+     "premium_pct": 8,
+     "wow_pct": 2
+    },
+    {
+     "yoy_pct": 5
+    },
+    {
+     "weeks": 6
+    },
+    {
+     "doubt": true
+    },
+    {
+     "years_out": 1.0,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2020Q3",
+   "conf": "low",
+   "note": "需求分化，价格承压",
+   "m": [
+    {
+     "premium_pct": 3,
+     "wow_pct": -1
+    },
+    {
+     "yoy_pct": 5
+    },
+    {
+     "weeks": 7
+    },
+    {
+     "peaked": true
+    },
+    {
+     "years_out": 1.0,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2020Q4",
+   "conf": "low",
+   "note": "需求回落，价格再度承压",
+   "m": [
+    {
+     "premium_pct": 2,
+     "wow_pct": -1
+    },
+    {
+     "yoy_pct": 0
+    },
+    {
+     "weeks": 8
+    },
+    {
+     "peaked": true
+    },
+    {
+     "years_out": 1.0,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2021Q1",
+   "conf": "low",
+   "note": "复苏启动，缺芯扩散",
+   "m": [
+    {
+     "premium_pct": 12,
+     "wow_pct": 2
+    },
+    {
+     "yoy_pct": 15
+    },
+    {
+     "weeks": 5
+    },
+    {},
+    {
+     "years_out": 1.2,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2021Q2",
+   "conf": "low",
+   "note": "全面缺芯，价格回升",
+   "m": [
+    {
+     "premium_pct": 18,
+     "wow_pct": 3
+    },
+    {
+     "yoy_pct": 25,
+     "new_fabs": 1
+    },
+    {
+     "weeks": 4
+    },
+    {},
+    {
+     "years_out": 1.5,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2021Q3",
+   "conf": "low",
+   "note": "涨势见顶，PC需求转弱",
+   "m": [
+    {
+     "premium_pct": 15,
+     "wow_pct": 0
+    },
+    {
+     "yoy_pct": 25,
+     "new_fabs": 1
+    },
+    {
+     "weeks": 5
+    },
+    {
+     "peaked": true
+    },
+    {
+     "years_out": 1.2,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2021Q4",
+   "conf": "low",
+   "note": "涨势见顶，PC需求转弱",
+   "m": [
+    {
+     "premium_pct": 6,
+     "wow_pct": -1,
+     "weeks_down": 5
+    },
+    {
+     "yoy_pct": 20,
+     "new_fabs": 1
+    },
+    {
+     "weeks": 7
+    },
+    {
+     "peaked": true,
+     "doubt": true
+    },
+    {
+     "years_out": 1.0,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2022Q1",
+   "conf": "mid",
+   "note": "DRAM ASP本轮见顶（约0.47美元）",
+   "m": [
+    {
+     "premium_pct": 2,
+     "wow_pct": -2,
+     "weeks_down": 10
+    },
+    {
+     "yoy_pct": 15
+    },
+    {
+     "weeks": 9
+    },
+    {
+     "n_cutting": 1,
+     "peaked": true
+    },
+    {
+     "years_out": 0.8,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2022Q2",
+   "conf": "mid",
+   "note": "消费电子需求崩塌，库存暴增",
+   "m": [
+    {
+     "premium_pct": -5,
+     "wow_pct": -4,
+     "weeks_down": 20
+    },
+    {
+     "yoy_pct": 5
+    },
+    {
+     "weeks": 12,
+     "cancel": true
+    },
+    {
+     "n_cutting": 2
+    },
+    {
+     "years_out": 0.5,
+     "bears": 3
+    }
+   ]
+  },
+  {
+   "q": "2022Q3",
+   "conf": "low",
+   "note": "消费电子崩塌，存储急跌",
+   "m": [
+    {
+     "premium_pct": -8,
+     "wow_pct": -5,
+     "weeks_down": 25
+    },
+    {
+     "yoy_pct": -10
+    },
+    {
+     "weeks": 14,
+     "cancel": true
+    },
+    {
+     "n_cutting": 2
+    },
+    {
+     "years_out": 0.5,
+     "bears": 3
+    }
+   ]
+  },
+  {
+   "q": "2022Q4",
+   "conf": "high",
+   "note": "美光宣布砍晶圆投片约20%",
+   "m": [
+    {
+     "premium_pct": -12,
+     "wow_pct": -4,
+     "weeks_down": 30
+    },
+    {
+     "yoy_pct": -20
+    },
+    {
+     "weeks": 16,
+     "cancel": true
+    },
+    {
+     "n_cutting": 2
+    },
+    {
+     "years_out": 0.5,
+     "bears": 3
+    }
+   ],
+   "production_cut": true
+  },
+  {
+   "q": "2023Q1",
+   "conf": "high",
+   "note": "三家集体减产，2023年合计减产达25%",
+   "m": [
+    {
+     "premium_pct": -8,
+     "wow_pct": -2,
+     "weeks_down": 38
+    },
+    {
+     "yoy_pct": -40
+    },
+    {
+     "weeks": 15
+    },
+    {
+     "n_cutting": 2
+    },
+    {
+     "years_out": 0.5,
+     "bears": 3
+    }
+   ],
+   "production_cut": true
+  },
+  {
+   "q": "2023Q2",
+   "conf": "low",
+   "note": "周期底部，三家集体减产砍capex",
+   "m": [
+    {
+     "premium_pct": -3,
+     "wow_pct": -1,
+     "weeks_down": 35
+    },
+    {
+     "yoy_pct": -40
+    },
+    {
+     "weeks": 11
+    },
+    {
+     "n_cutting": 1
+    },
+    {
+     "years_out": 0.5,
+     "bears": 3
+    }
+   ],
+   "production_cut": true
+  },
+  {
+   "q": "2023Q3",
+   "conf": "high",
+   "note": "周期底部：三星Q3营业利润环比+262.6%，海力士DRAM转盈",
+   "m": [
+    {
+     "premium_pct": 0,
+     "wow_pct": 1
+    },
+    {
+     "yoy_pct": -40
+    },
+    {
+     "weeks": 9
+    },
+    {
+     "peaked": true
+    },
+    {
+     "years_out": 0.5,
+     "bears": 3
+    }
+   ],
+   "production_cut": true
+  },
+  {
+   "q": "2023Q4",
+   "conf": "mid",
+   "note": "复苏启动，价格回升",
+   "m": [
+    {
+     "premium_pct": 5,
+     "wow_pct": 2
+    },
+    {
+     "yoy_pct": -20
+    },
+    {
+     "weeks": 7
+    },
+    {
+     "doubt": true
+    },
+    {
+     "years_out": 1.0,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2024Q1",
+   "conf": "low",
+   "note": "价格延续回升，HBM拉动",
+   "m": [
+    {
+     "premium_pct": 8,
+     "wow_pct": 2
+    },
+    {
+     "yoy_pct": 0
+    },
+    {
+     "weeks": 6
+    },
+    {},
+    {
+     "years_out": 1.0,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2024Q2",
+   "conf": "low",
+   "note": "AI/HBM拉动复苏，价格回升",
+   "m": [
+    {
+     "premium_pct": 10,
+     "wow_pct": 2
+    },
+    {
+     "yoy_pct": 10
+    },
+    {
+     "weeks": 5
+    },
+    {},
+    {
+     "years_out": 1.0,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2024Q3",
+   "conf": "low",
+   "note": "AI需求确认，供给仍克制",
+   "m": [
+    {
+     "premium_pct": 12,
+     "wow_pct": 2
+    },
+    {
+     "yoy_pct": 15
+    },
+    {
+     "weeks": 5
+    },
+    {},
+    {
+     "years_out": 1.2,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2024Q4",
+   "conf": "low",
+   "note": "景气上行中段",
+   "m": [
+    {
+     "premium_pct": 10,
+     "wow_pct": 1
+    },
+    {
+     "yoy_pct": 20,
+     "new_fabs": 1
+    },
+    {
+     "weeks": 5
+    },
+    {},
+    {
+     "years_out": 1.5,
+     "bears": 2
+    }
+   ]
+  },
+  {
+   "q": "2025Q1",
+   "conf": "low",
+   "note": "供给转紧信号增多",
+   "m": [
+    {
+     "premium_pct": 15,
+     "wow_pct": 3
+    },
+    {
+     "yoy_pct": 20,
+     "new_fabs": 1
+    },
+    {
+     "weeks": 4
+    },
+    {},
+    {
+     "years_out": 1.5,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2025Q2",
+   "conf": "low",
+   "note": "AI资本开支爆发，供给转紧",
+   "m": [
+    {
+     "premium_pct": 20,
+     "wow_pct": 4
+    },
+    {
+     "yoy_pct": 25,
+     "new_fabs": 1
+    },
+    {
+     "weeks": 4
+    },
+    {},
+    {
+     "years_out": 2.0,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2025Q3",
+   "conf": "mid",
+   "note": "价格加速，抢货初现",
+   "m": [
+    {
+     "premium_pct": 25,
+     "wow_pct": 5
+    },
+    {
+     "yoy_pct": 30,
+     "new_fabs": 2
+    },
+    {
+     "weeks": 3,
+     "lta": true
+    },
+    {},
+    {
+     "years_out": 2.0,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2025Q4",
+   "conf": "mid",
+   "note": "抢货潮，价格单月翻倍",
+   "m": [
+    {
+     "premium_pct": 35,
+     "wow_pct": 8
+    },
+    {
+     "yoy_pct": 35,
+     "new_fabs": 2
+    },
+    {
+     "weeks": 3,
+     "lta": true,
+     "sellout": true
+    },
+    {},
+    {
+     "years_out": 2.5,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2026Q1",
+   "conf": "mid",
+   "note": "合约价环比创纪录涨幅；长约锁量盛行",
+   "m": [
+    {
+     "premium_pct": 28,
+     "wow_pct": 5
+    },
+    {
+     "yoy_pct": 40,
+     "new_fabs": 3,
+     "new_entrant": true
+    },
+    {
+     "weeks": 3,
+     "lta": true,
+     "sellout": true
+    },
+    {},
+    {
+     "years_out": 3.0,
+     "bears": 1
+    }
+   ]
+  },
+  {
+   "q": "2026Q2",
+   "conf": "high",
+   "note": "现货成交转清淡、买方抵制报价；海力士上市日称缺到2030",
+   "m": [
+    {
+     "premium_pct": 15,
+     "wow_pct": 1
+    },
+    {
+     "yoy_pct": 40,
+     "new_fabs": 4,
+     "new_entrant": true
+    },
+    {
+     "weeks": 3,
+     "lta": true,
+     "sellout": true
+    },
+    {
+     "doubt": true
+    },
+    {
+     "years_out": 4.0,
+     "bears": 1,
+     "mega": true
+    }
+   ]
+  },
+  {
+   "q": "2026Q3",
+   "conf": "high",
+   "note": "当前实测期（对应温度计07/17与07/26读数）",
+   "m": [
+    {
+     "premium_pct": 12,
+     "wow_pct": 1
+    },
+    {
+     "yoy_pct": 40,
+     "new_fabs": 4,
+     "new_entrant": true
+    },
+    {
+     "weeks": 3.5,
+     "lta": true,
+     "sellout": true
+    },
+    {
+     "doubt": true
+    },
+    {
+     "years_out": 4.0,
+     "bears": 1,
+     "mega": true
+    }
+   ]
+  }
+ ]
+}

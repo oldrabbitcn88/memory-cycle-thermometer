@@ -1,127 +1,71 @@
-// pages/index/index.js —— 温度计首页：读云存储 data.json 并渲染
+// pages/index/index.js —— v3 双向指标展示
 const cfg = require('../../config');
-
-const COLORS = { green: '#16a34a', lime: '#a3b209', amber: '#d97706', red: '#dc2626' };
-
-function colorOf(v) {
-  if (v < 30) return COLORS.green;
-  if (v < 50) return COLORS.lime;
-  if (v < 70) return COLORS.amber;
-  return COLORS.red;
-}
-function tagOf(v) {
-  if (v < 30) return { text: '低温', bg: '#dcfce7', fg: '#166534' };
-  if (v < 50) return { text: '温热', bg: '#fef9c3', fg: '#854d0e' };
-  if (v < 70) return { text: '偏热', bg: '#ffedd5', fg: '#9a3412' };
-  return { text: '高温', bg: '#fee2e2', fg: '#991b1b' };
-}
+const C = { g:'#16a34a', l:'#a3b209', a:'#d97706', r:'#dc2626', b:'#2563eb' };
+const colorOf = v => v<30?C.g : v<50?C.l : v<70?C.a : C.r;
 
 Page({
-  data: {
-    loading: true,
-    err: '',
-    d: null,          // 原始 data.json
-    sig: [],          // 渲染用信号数组（附加颜色/标签）
-    totalColor: '',
-    delta: null       // 相对上期的总温度变化
-  },
+  data:{ loading:true, err:'', d:null, sig:[], topColor:'', botColor:'', tab:'weekly' },
+  onLoad(){ this.fetch(); },
+  onPullDownRefresh(){ this.fetch(()=>wx.stopPullDownRefresh()); },
 
-  onLoad() { this.fetch(); },
-  onPullDownRefresh() { this.fetch(() => wx.stopPullDownRefresh()); },
-
-  fetch(done) {
-    this.setData({ loading: true, err: '' });
+  fetch(done){
+    this.setData({loading:true, err:''});
     wx.request({
-      // 加时间戳绕过 CDN 缓存，确保拿到最新一期
-      url: cfg.dataUrl + '?t=' + Date.now(),
-      method: 'GET',
-      dataType: 'json',
-      success: res => {
-        if (res.statusCode !== 200) {
-          this.fail('HTTP ' + res.statusCode + '（403 多为云存储权限未设为「所有用户可读」）');
-        } else {
-          const d = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
-          this.render(d);
-        }
-        done && done();
+      url: cfg.dataUrl + '?t=' + Date.now(), method:'GET', dataType:'json',
+      success: res=>{
+        if(res.statusCode!==200){ this.fail('HTTP '+res.statusCode+'（403多为云存储权限未设为所有用户可读）'); }
+        else { this.render(typeof res.data==='string'? JSON.parse(res.data) : res.data); }
+        done&&done();
       },
-      fail: e => {
-        this.fail('请求失败（检查 config.js 的 dataUrl，及该域名是否已加入 request 合法域名）: ' + e.errMsg);
-        done && done();
-      }
+      fail: e=>{ this.fail('请求失败（检查 dataUrl 与 request 合法域名）: '+e.errMsg); done&&done(); }
     });
   },
+  fail(msg){ this.setData({loading:false, err:msg}); },
 
-  fail(msg) { this.setData({ loading: false, err: msg }); },
-
-  render(d) {
-    const sig = d.signals.map(s => ({
-      ...s,
-      color: colorOf(s.score),
-      tag: tagOf(s.score),
-      weightPct: Math.round(s.weight * 100),
-      open: false
+  render(d){
+    const sig = (d.signals||[]).map(s=>({
+      ...s, color: colorOf(s.score), weightPct: Math.round(s.weight*100),
+      metricText: this.fmt(s.id, s.metrics), open:false
     }));
-    const h = d.history || [];
-    const delta = h.length >= 2 ? h[h.length - 1].total - h[h.length - 2].total : null;
-    this.setData({ loading: false, d, sig, totalColor: colorOf(d.total), delta }, () => {
-      if (h.length >= 2) this.drawChart(h);
+    this.setData({loading:false, d, sig, topColor:colorOf(d.top),
+                  botColor: d.bottom>=60? C.g : '#9ca3af'}, ()=>this.draw(d));
+  },
+
+  fmt(id, m){
+    if(!m) return '';
+    if(id===1) return `现货周环比 ${m.wow_pct>0?'+':''}${m.wow_pct}% · 连跌 ${m.weeks_down||0} 周`;
+    if(id===2) return `capex同比 ${m.yoy_pct}% · 新fab ${m.new_fabs||0} 座${m.new_entrant?' · 新玩家扩产':''}`;
+    if(id===3) return `库存 ${m.weeks} 周${m.lta?' · 长约锁量':''}${m.sellout?' · 售罄话术':''}${m.cancel?' · 已现砍单':''}`;
+    if(id===4) return `削减家数 ${m.n_cutting||0}${m.peaked?' · 增速见顶':''}${m.doubt?' · 回报率质疑':''}`;
+    if(id===5) return `短缺预测 ${m.years_out} 年 · 看空 ${m.bears||0} 方${m.mega?' · 龙头上市/巨额融资':''}`;
+    return '';
+  },
+
+  toggle(e){ const i=e.currentTarget.dataset.i; this.setData({['sig['+i+'].open']:!this.data.sig[i].open}); },
+  switchTab(e){ this.setData({tab:e.currentTarget.dataset.t}, ()=>this.draw(this.data.d)); },
+
+  draw(d){
+    const src = this.data.tab==='weekly' ? (d.weekly||[]) : (d.quarterly||[]);
+    if(src.length<2) return;
+    wx.createSelectorQuery().select('#ch').fields({node:true,size:true}).exec(res=>{
+      if(!res||!res[0]) return;
+      const {node:cv, width, height} = res[0];
+      const dpr = wx.getWindowInfo().pixelRatio||2;
+      cv.width=width*dpr; cv.height=height*dpr;
+      const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr); ctx.clearRect(0,0,width,height);
+      const P={l:28,r:10,t:14,b:20}, w=width-P.l-P.r, h=height-P.t-P.b;
+      const y=v=>P.t+h*(1-v/100), x=i=>P.l+(src.length===1?w/2:w*i/(src.length-1));
+      ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1;
+      [0,50,100].forEach(v=>{ctx.beginPath();ctx.moveTo(P.l,y(v));ctx.lineTo(width-P.r,y(v));ctx.stroke();
+        ctx.fillStyle='#c9c9c9';ctx.font='9px sans-serif';ctx.fillText(String(v),6,y(v)+3);});
+      const line=(key,col)=>{ ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath();
+        src.forEach((p,i)=> i? ctx.lineTo(x(i),y(p[key])) : ctx.moveTo(x(i),y(p[key])) ); ctx.stroke(); };
+      line('bottom', C.g); line('top', C.r);
+      src.forEach((p,i)=>{ if(p.trig){ ctx.fillStyle=C.r; ctx.beginPath();
+        ctx.arc(x(i),y(p.top),3.5,0,6.284); ctx.fill(); }});
+      ctx.fillStyle='#9ca3af'; ctx.font='9px sans-serif';
+      ctx.fillText(String(src[0].period).slice(2), P.l-4, height-5);
+      ctx.fillText(String(src[src.length-1].period).slice(2), width-P.r-32, height-5);
     });
-  },
-
-  toggle(e) {
-    const i = e.currentTarget.dataset.i;
-    this.setData({ ['sig[' + i + '].open']: !this.data.sig[i].open });
-  },
-
-
-  // 历史总温度折线（Canvas 2D）
-  drawChart(hist) {
-    wx.createSelectorQuery()
-      .select('#hist')
-      .fields({ node: true, size: true })
-      .exec(res => {
-        if (!res || !res[0]) return;
-        const { node: canvas, width, height } = res[0];
-        const dpr = wx.getWindowInfo().pixelRatio || 2;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        const ctx = canvas.getContext('2d');
-        ctx.scale(dpr, dpr);
-        ctx.clearRect(0, 0, width, height);
-
-        const P = { l: 30, r: 12, t: 16, b: 22 };
-        const w = width - P.l - P.r, hgt = height - P.t - P.b;
-        const y = v => P.t + hgt * (1 - v / 100);
-        const x = i => P.l + (hist.length === 1 ? w / 2 : (w * i) / (hist.length - 1));
-
-        // 阈值虚线 50 / 70
-        [[50, COLORS.amber], [70, COLORS.red]].forEach(([v, c]) => {
-          ctx.strokeStyle = c; ctx.globalAlpha = 0.45;
-          ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(P.l, y(v)); ctx.lineTo(width - P.r, y(v)); ctx.stroke();
-          ctx.globalAlpha = 1; ctx.setLineDash([]);
-          ctx.fillStyle = c; ctx.font = '10px sans-serif';
-          ctx.fillText(String(v), 8, y(v) + 3);
-        });
-
-        // 折线
-        ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2;
-        ctx.beginPath();
-        hist.forEach((p, i) => (i === 0 ? ctx.moveTo(x(i), y(p.total)) : ctx.lineTo(x(i), y(p.total))));
-        ctx.stroke();
-
-        // 数据点 + 数值 + 日期
-        hist.forEach((p, i) => {
-          ctx.fillStyle = '#2563eb';
-          ctx.beginPath(); ctx.arc(x(i), y(p.total), 3, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#374151'; ctx.font = '10px sans-serif';
-          ctx.fillText(String(p.total), x(i) - 7, y(p.total) - 7);
-          if (i === 0 || i === hist.length - 1) {
-            ctx.fillStyle = '#9ca3af';
-            ctx.fillText(p.date.slice(5), x(i) - 14, height - 6);
-          }
-        });
-      });
   }
 });

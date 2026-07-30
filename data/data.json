@@ -1,4 +1,5 @@
 {
+<<<<<<< Updated upstream
   "updated": "2026-07-26",
   "total": 59,
   "stage": "过热中期 → 顶部预警",
@@ -142,4 +143,856 @@
     }
   ],
   "disclaimer": "本页面为个人研究用途的公开信息聚合，由程序按固定规则自动生成，可能存在错误或延迟，不构成任何投资建议。"
+=======
+ "updated": "2026-07-21",
+ "schema": "v3",
+ "top": 32,
+ "bottom": 7,
+ "phase": "扩张期",
+ "stage": "过热前期",
+ "stage_desc": "上行动能仍在，供给端/叙事端开始积累矛盾。",
+ "n50": 3,
+ "n75": 2,
+ "triggers": [],
+ "signals": [
+  {
+   "id": 1,
+   "name": "现货价 vs 合约价",
+   "lead": "领先1–2季度 · 主触发器",
+   "score": 10,
+   "weight": 0.25,
+   "metrics": {
+    "premium_pct": 120.0,
+    "wow_pct": 3.27,
+    "weeks_down": 0
+   },
+   "fresh": true
+  },
+  {
+   "id": 2,
+   "name": "设备商存储订单",
+   "lead": "领先12–18个月 · 背景条件",
+   "score": 90,
+   "weight": 0.2,
+   "metrics": {
+    "yoy_pct": 40,
+    "new_fabs": 4,
+    "new_entrant": true,
+    "asof": "2026-07-06"
+   },
+   "fresh": true
+  },
+  {
+   "id": 3,
+   "name": "下游库存与囤货",
+   "lead": "领先2–3季度",
+   "score": 55,
+   "weight": 0.2,
+   "metrics": {
+    "weeks": 3.5,
+    "lta": true,
+    "sellout": true,
+    "cancel": false,
+    "asof": "2026-07-08"
+   },
+   "fresh": true
+  },
+  {
+   "id": 4,
+   "name": "需求引擎(AI capex)",
+   "lead": "核心变量 · 门槛条件",
+   "score": 35,
+   "weight": 0.2,
+   "metrics": {
+    "n_cutting": 0,
+    "peaked": false,
+    "doubt": true,
+    "asof": "2026-07-03"
+   },
+   "fresh": true
+  },
+  {
+   "id": 5,
+   "name": "卖方一致性与话术",
+   "lead": "反向指标 · 背景条件",
+   "score": 80,
+   "weight": 0.15,
+   "metrics": {
+    "years_out": 4.0,
+    "bears": 1,
+    "mega": true,
+    "asof": "2026-07-12"
+   },
+   "fresh": true
+  }
+ ],
+ "equity_anchor": {
+  "price": 47.62,
+  "high": 81.34,
+  "asof": "2026-07-29",
+  "drawdown_pct": -41.5,
+  "alert": true,
+  "note": "股价已深度回撤而现货仍创新高——前瞻定价先于现货转向，2018/2022两轮均出现此形态"
+ },
+ "spot": {
+  "latest_date": "2026-07-21",
+  "latest": 41.1,
+  "prev_date": "2026-07-15",
+  "prev": 39.8,
+  "weeks_down": 0,
+  "at_record": true
+ },
+ "sources": [
+  {
+   "title": "TrendForce 现货周报 07-22",
+   "url": "https://www.trendforce.com/news/2026/07/22/insights-memory-spot-price-update-dram-spot-market-edges-higher-as-branded-ddr4-demand-supports-prices/"
+  },
+  {
+   "title": "Capital & Compute 现货价与ETF追踪",
+   "url": "https://capitalandcompute.net/memory-prices/"
+  },
+  {
+   "title": "Motley Fool 三星+海力士扩产",
+   "url": "https://www.fool.com/investing/2026/07/06/microns-strategy-face-sk-hynix-samsung-spend/"
+  },
+  {
+   "title": "Tom's Hardware 海力士CEO称缺到2030",
+   "url": "https://www.tomshardware.com/pc-components/dram/sk-hynix-says-2027-will-be-the-worst-year-for-memory-shortage-forecasts-crunch-to-last-until-2030-ceo-shares-grim-outlook-on-the-day-sk-hynix-gets-listed-on-nasdaq"
+  }
+ ],
+ "note": "现货连创新高($41.10)，股价却距高点-41.5%",
+ "quarterly": [
+  {
+   "period": "2018Q1",
+   "s": [
+    38,
+    85,
+    20,
+    35,
+    30
+   ],
+   "top": 36,
+   "bottom": 18,
+   "phase": "扩张期",
+   "n50": 1,
+   "n75": 1,
+   "trig": true,
+   "conf": "high",
+   "note": "DDR4现货自年初走弱；比特币1月腰斩；capex仍+40%",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2018Q2",
+   "s": [
+    55,
+    85,
+    55,
+    50,
+    20
+   ],
+   "top": 47,
+   "bottom": 20,
+   "phase": "顶部预警",
+   "n50": 4,
+   "n75": 1,
+   "trig": true,
+   "conf": "high",
+   "note": "现货持续跌；矿难显性化（台积电6月营收环比-13%）；美光股价5月见顶",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2018Q3",
+   "s": [
+    85,
+    75,
+    65,
+    65,
+    0
+   ],
+   "top": 53,
+   "bottom": 28,
+   "phase": "顶部预警",
+   "n50": 4,
+   "n75": 2,
+   "trig": true,
+   "conf": "high",
+   "note": "倒挂出现；合约价见顶；安卓渠道库存高企、iPhone出货见顶",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2018Q4",
+   "s": [
+    95,
+    15,
+    85,
+    85,
+    0
+   ],
+   "top": 61,
+   "bottom": 46,
+   "phase": "下行期",
+   "n50": 3,
+   "n75": 3,
+   "trig": false,
+   "conf": "high",
+   "note": "三星10/31砍capex 27%宣告景气结束；11月合约价两次下调；英伟达季内-54%",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2019Q1",
+   "s": [
+    95,
+    15,
+    85,
+    85,
+    0
+   ],
+   "top": 61,
+   "bottom": 50,
+   "phase": "下行期",
+   "n50": 3,
+   "n75": 3,
+   "trig": false,
+   "conf": "high",
+   "note": "合约价加速下跌；DRAM capex同比转负；渠道库存15周+",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2019Q2",
+   "s": [
+    95,
+    15,
+    80,
+    65,
+    0
+   ],
+   "top": 56,
+   "bottom": 76,
+   "phase": "下行期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "mid",
+   "note": "下行中段，去库存",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2019Q3",
+   "s": [
+    85,
+    15,
+    65,
+    50,
+    0
+   ],
+   "top": 47,
+   "bottom": 83,
+   "phase": "下行期",
+   "n50": 3,
+   "n75": 1,
+   "trig": false,
+   "conf": "mid",
+   "note": "跌幅收敛，接近底部",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2019Q4",
+   "s": [
+    60,
+    15,
+    55,
+    35,
+    0
+   ],
+   "top": 36,
+   "bottom": 99,
+   "phase": "筑底期",
+   "n50": 2,
+   "n75": 0,
+   "trig": false,
+   "conf": "mid",
+   "note": "筑底，现货企稳",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2020Q1",
+   "s": [
+    32,
+    15,
+    55,
+    50,
+    0
+   ],
+   "top": 32,
+   "bottom": 58,
+   "phase": "筑底期",
+   "n50": 2,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "疫情初期，服务器需求上升消费下滑",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2020Q2",
+   "s": [
+    32,
+    35,
+    55,
+    35,
+    10
+   ],
+   "top": 34,
+   "bottom": 49,
+   "phase": "扩张期",
+   "n50": 1,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "疫情居家拉动服务器，短暂回暖",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2020Q3",
+   "s": [
+    40,
+    35,
+    55,
+    50,
+    0
+   ],
+   "top": 38,
+   "bottom": 40,
+   "phase": "顶部预警",
+   "n50": 2,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "需求分化，价格承压",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2020Q4",
+   "s": [
+    60,
+    15,
+    65,
+    50,
+    0
+   ],
+   "top": 41,
+   "bottom": 46,
+   "phase": "顶部预警",
+   "n50": 3,
+   "n75": 0,
+   "trig": true,
+   "conf": "low",
+   "note": "需求回落，价格再度承压",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2021Q1",
+   "s": [
+    25,
+    55,
+    20,
+    20,
+    30
+   ],
+   "top": 30,
+   "bottom": 78,
+   "phase": "扩张期",
+   "n50": 1,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "复苏启动，缺芯扩散",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2021Q2",
+   "s": [
+    25,
+    55,
+    20,
+    20,
+    30
+   ],
+   "top": 30,
+   "bottom": 44,
+   "phase": "扩张期",
+   "n50": 1,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "全面缺芯，价格回升",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2021Q3",
+   "s": [
+    38,
+    55,
+    20,
+    50,
+    30
+   ],
+   "top": 38,
+   "bottom": 28,
+   "phase": "顶部预警",
+   "n50": 2,
+   "n75": 0,
+   "trig": true,
+   "conf": "low",
+   "note": "涨势见顶，PC需求转弱",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2021Q4",
+   "s": [
+    55,
+    55,
+    55,
+    50,
+    0
+   ],
+   "top": 43,
+   "bottom": 34,
+   "phase": "顶部预警",
+   "n50": 4,
+   "n75": 0,
+   "trig": true,
+   "conf": "low",
+   "note": "涨势见顶，PC需求转弱",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2022Q1",
+   "s": [
+    60,
+    55,
+    65,
+    65,
+    0
+   ],
+   "top": 48,
+   "bottom": 34,
+   "phase": "顶部预警",
+   "n50": 4,
+   "n75": 0,
+   "trig": true,
+   "conf": "mid",
+   "note": "DRAM ASP本轮见顶（约0.47美元）",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2022Q2",
+   "s": [
+    85,
+    35,
+    85,
+    85,
+    0
+   ],
+   "top": 62,
+   "bottom": 40,
+   "phase": "顶部预警",
+   "n50": 3,
+   "n75": 3,
+   "trig": true,
+   "conf": "mid",
+   "note": "消费电子需求崩塌，库存暴增",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2022Q3",
+   "s": [
+    95,
+    15,
+    85,
+    85,
+    0
+   ],
+   "top": 61,
+   "bottom": 46,
+   "phase": "下行期",
+   "n50": 3,
+   "n75": 3,
+   "trig": false,
+   "conf": "low",
+   "note": "消费电子崩塌，存储急跌",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2022Q4",
+   "s": [
+    95,
+    15,
+    85,
+    85,
+    0
+   ],
+   "top": 61,
+   "bottom": 50,
+   "phase": "下行期",
+   "n50": 3,
+   "n75": 3,
+   "trig": false,
+   "conf": "high",
+   "note": "美光宣布砍晶圆投片约20%",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2023Q1",
+   "s": [
+    95,
+    15,
+    80,
+    85,
+    0
+   ],
+   "top": 60,
+   "bottom": 67,
+   "phase": "下行期",
+   "n50": 3,
+   "n75": 3,
+   "trig": false,
+   "conf": "high",
+   "note": "三家集体减产，2023年合计减产达25%",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2023Q2",
+   "s": [
+    85,
+    15,
+    80,
+    65,
+    0
+   ],
+   "top": 53,
+   "bottom": 86,
+   "phase": "下行期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "low",
+   "note": "周期底部，三家集体减产砍capex",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2023Q3",
+   "s": [
+    60,
+    15,
+    65,
+    50,
+    0
+   ],
+   "top": 41,
+   "bottom": 74,
+   "phase": "筑底期",
+   "n50": 3,
+   "n75": 0,
+   "trig": false,
+   "conf": "high",
+   "note": "周期底部：三星Q3营业利润环比+262.6%，海力士DRAM转盈",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2023Q4",
+   "s": [
+    32,
+    15,
+    55,
+    35,
+    0
+   ],
+   "top": 29,
+   "bottom": 90,
+   "phase": "筑底期",
+   "n50": 1,
+   "n75": 0,
+   "trig": false,
+   "conf": "mid",
+   "note": "复苏启动，价格回升",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2024Q1",
+   "s": [
+    32,
+    15,
+    55,
+    20,
+    0
+   ],
+   "top": 26,
+   "bottom": 57,
+   "phase": "筑底期",
+   "n50": 1,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "价格延续回升，HBM拉动",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2024Q2",
+   "s": [
+    25,
+    35,
+    20,
+    20,
+    0
+   ],
+   "top": 21,
+   "bottom": 53,
+   "phase": "扩张期",
+   "n50": 0,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "AI/HBM拉动复苏，价格回升",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2024Q3",
+   "s": [
+    25,
+    55,
+    20,
+    20,
+    20
+   ],
+   "top": 28,
+   "bottom": 30,
+   "phase": "扩张期",
+   "n50": 1,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "AI需求确认，供给仍克制",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2024Q4",
+   "s": [
+    25,
+    55,
+    20,
+    20,
+    20
+   ],
+   "top": 28,
+   "bottom": 30,
+   "phase": "扩张期",
+   "n50": 1,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "景气上行中段",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2025Q1",
+   "s": [
+    25,
+    55,
+    20,
+    20,
+    30
+   ],
+   "top": 28,
+   "bottom": 44,
+   "phase": "扩张期",
+   "n50": 1,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "供给转紧信号增多",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2025Q2",
+   "s": [
+    10,
+    55,
+    20,
+    20,
+    30
+   ],
+   "top": 23,
+   "bottom": 28,
+   "phase": "扩张期",
+   "n50": 1,
+   "n75": 0,
+   "trig": false,
+   "conf": "low",
+   "note": "AI资本开支爆发，供给转紧",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2025Q3",
+   "s": [
+    10,
+    85,
+    40,
+    20,
+    30
+   ],
+   "top": 30,
+   "bottom": 38,
+   "phase": "扩张期",
+   "n50": 1,
+   "n75": 1,
+   "trig": false,
+   "conf": "mid",
+   "note": "价格加速，抢货初现",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2025Q4",
+   "s": [
+    10,
+    85,
+    55,
+    20,
+    50
+   ],
+   "top": 34,
+   "bottom": 14,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 1,
+   "trig": false,
+   "conf": "mid",
+   "note": "抢货潮，价格单月翻倍",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2026Q1",
+   "s": [
+    10,
+    90,
+    55,
+    20,
+    50
+   ],
+   "top": 32,
+   "bottom": 13,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 1,
+   "trig": false,
+   "conf": "mid",
+   "note": "合约价环比创纪录涨幅；长约锁量盛行",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2026Q2",
+   "s": [
+    25,
+    90,
+    55,
+    35,
+    80
+   ],
+   "top": 42,
+   "bottom": 7,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "high",
+   "note": "现货成交转清淡、买方抵制报价；海力士上市日称缺到2030",
+   "kind": "季度重建"
+  },
+  {
+   "period": "2026Q3",
+   "s": [
+    25,
+    90,
+    55,
+    35,
+    80
+   ],
+   "top": 41,
+   "bottom": 7,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "high",
+   "note": "当前实测期（对应温度计07/17与07/26读数）",
+   "kind": "季度重建"
+  }
+ ],
+ "weekly": [
+  {
+   "period": "2026-07-07",
+   "s": [
+    10,
+    90,
+    55,
+    35,
+    80
+   ],
+   "top": 35,
+   "bottom": 0,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "high",
+   "note": "现货$37.14 (+3.17%)",
+   "kind": "周度实测",
+   "spot": 37.14,
+   "wow": 3.17
+  },
+  {
+   "period": "2026-07-15",
+   "s": [
+    10,
+    90,
+    55,
+    35,
+    80
+   ],
+   "top": 34,
+   "bottom": 7,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "high",
+   "note": "现货$39.8 (+7.16%)",
+   "kind": "周度实测",
+   "spot": 39.8,
+   "wow": 7.16
+  },
+  {
+   "period": "2026-07-21",
+   "s": [
+    10,
+    90,
+    55,
+    35,
+    80
+   ],
+   "top": 32,
+   "bottom": 7,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "high",
+   "note": "现货$41.1 (+3.27%)",
+   "kind": "周度实测",
+   "spot": 41.1,
+   "wow": 3.27
+  }
+ ],
+ "disclaimer": "本页面为个人研究用途的公开信息聚合，由程序按固定规则自动生成，季度序列为历史规则重建而非实测，可能存在错误或延迟，不构成任何投资建议。"
+>>>>>>> Stashed changes
 }

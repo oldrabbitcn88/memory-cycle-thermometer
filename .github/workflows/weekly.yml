@@ -2,9 +2,8 @@ name: 每周更新存储周期温度计
 
 on:
   schedule:
-    # UTC 周一 00:30 = 北京时间 周一 08:30
-    - cron: "30 0 * * 1"
-  workflow_dispatch: {}   # 支持手动触发（首次部署时用）
+    - cron: "30 0 * * 1"      # UTC 周一 00:30 = 北京 08:30
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -12,29 +11,26 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
+        with: { python-version: "3.11" }
       - name: 安装依赖
         run: pip install anthropic tencentcloud-sdk-python cos-python-sdk-v5
-
-      - name: 打分并上传云开发存储
+      - name: 提取指标→机械映射→上传
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           TCB_SECRET_ID: ${{ secrets.TCB_SECRET_ID }}
           TCB_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
           TCB_ENV: ${{ secrets.TCB_ENV }}
         run: python scripts/update.py
-
-      - name: 提交历史数据回仓库（真实累积，git 即审计记录）
+      - name: 回归自检（确保口径未漂移）
+        run: python backtest/probe.py | tail -5
+      - name: 提交历史回仓库
         run: |
           git config user.name "thermometer-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data/history.json data/data.json
+          git add data/history_v3.json data/data.json
           git diff --cached --quiet || git commit -m "读数更新 $(date -u +%F)"
           git push
