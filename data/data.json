@@ -1,7 +1,7 @@
 {
- "updated": "2026-07-21",
- "schema": "v3",
- "top": 32,
+ "updated": "2026-07-30",
+ "schema": "v3.1",
+ "top": 35,
  "bottom": 7,
  "phase": "扩张期",
  "stage": "过热前期",
@@ -35,7 +35,7 @@
     "new_entrant": true,
     "asof": "2026-07-06"
    },
-   "fresh": true
+   "fresh": false
   },
   {
    "id": 3,
@@ -50,7 +50,7 @@
     "cancel": false,
     "asof": "2026-07-08"
    },
-   "fresh": true
+   "fresh": false
   },
   {
    "id": 4,
@@ -64,7 +64,7 @@
     "doubt": true,
     "asof": "2026-07-03"
    },
-   "fresh": true
+   "fresh": false
   },
   {
    "id": 5,
@@ -78,16 +78,16 @@
     "mega": true,
     "asof": "2026-07-12"
    },
-   "fresh": true
+   "fresh": false
   }
  ],
  "equity_anchor": {
-  "price": 47.62,
-  "high": 81.34,
-  "asof": "2026-07-29",
   "drawdown_pct": -41.5,
   "alert": true,
-  "note": "股价已深度回撤而现货仍创新高——前瞻定价先于现货转向，2018/2022两轮均出现此形态"
+  "note": "股价已深度回撤而现货仍创新高——前瞻定价先于现货转向，2018/2022两轮均出现此形态",
+  "price": 47.62,
+  "high_52w": 81.34,
+  "source": "https://capitalandcompute.net/memory-prices/"
  },
  "spot": {
   "latest_date": "2026-07-21",
@@ -95,27 +95,21 @@
   "prev_date": "2026-07-15",
   "prev": 39.8,
   "weeks_down": 0,
-  "at_record": true
+  "at_record": true,
+  "series_len": 13,
+  "source": "https://capitalandcompute.net/memory-prices/"
  },
  "sources": [
   {
-   "title": "TrendForce 现货周报 07-22",
-   "url": "https://www.trendforce.com/news/2026/07/22/insights-memory-spot-price-update-dram-spot-market-edges-higher-as-branded-ddr4-demand-supports-prices/"
-  },
-  {
-   "title": "Capital & Compute 现货价与ETF追踪",
+   "title": "TrendForce 现货价（经 Capital & Compute 聚合）",
    "url": "https://capitalandcompute.net/memory-prices/"
   },
   {
-   "title": "Motley Fool 三星+海力士扩产",
-   "url": "https://www.fool.com/investing/2026/07/06/microns-strategy-face-sk-hynix-samsung-spend/"
-  },
-  {
-   "title": "Tom's Hardware 海力士CEO称缺到2030",
-   "url": "https://www.tomshardware.com/pc-components/dram/sk-hynix-says-2027-will-be-the-worst-year-for-memory-shortage-forecasts-crunch-to-last-until-2030-ceo-shares-grim-outlook-on-the-day-sk-hynix-gets-listed-on-nasdaq"
+   "title": "TrendForce 官方现货价页",
+   "url": "https://www.trendforce.com/price/dram/dram_spot"
   }
  ],
- "note": "现货连创新高($41.10)，股价却距高点-41.5%",
+ "note": "现货$41.1（创新高），连跌0周；股价距高点-41.5%",
  "quarterly": [
   {
    "period": "2018Q1",
@@ -846,6 +840,27 @@
    "kind": "周度实测",
    "spot": 41.1,
    "wow": 3.27
+  },
+  {
+   "period": "2026-07-30",
+   "s": [
+    10,
+    90,
+    55,
+    35,
+    80
+   ],
+   "top": 35,
+   "bottom": 7,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "high",
+   "kind": "周度实测",
+   "spot": 41.1,
+   "wow": 3.27,
+   "note": "现货$41.1（创新高），连跌0周；股价距高点-41.5%"
   }
  ],
  "disclaimer": "本页面为个人研究用途的公开信息聚合，由程序按固定规则自动生成，季度序列为历史规则重建而非实测，可能存在错误或延迟，不构成任何投资建议。"

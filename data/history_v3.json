@@ -732,22 +732,43 @@
    "kind": "周度实测",
    "spot": 41.1,
    "wow": 3.27
+  },
+  {
+   "period": "2026-07-30",
+   "s": [
+    10,
+    90,
+    55,
+    35,
+    80
+   ],
+   "top": 35,
+   "bottom": 7,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "high",
+   "kind": "周度实测",
+   "spot": 41.1,
+   "wow": 3.27,
+   "note": "现货$41.1（创新高），连跌0周；股价距高点-41.5%"
   }
  ],
  "equity_anchor": {
-  "price": 47.62,
-  "high": 81.34,
-  "asof": "2026-07-29",
   "drawdown_pct": -41.5,
   "alert": true,
-  "note": "股价已深度回撤而现货仍创新高——前瞻定价先于现货转向，2018/2022两轮均出现此形态"
+  "note": "股价已深度回撤而现货仍创新高——前瞻定价先于现货转向，2018/2022两轮均出现此形态",
+  "price": 47.62,
+  "high_52w": 81.34,
+  "source": "https://capitalandcompute.net/memory-prices/"
  },
  "streak_carryover": [
   0,
-  12,
-  4,
+  13,
+  5,
   0,
-  4
+  5
  ],
  "last_metrics_mapped": [
   {
