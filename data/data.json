@@ -1,7 +1,7 @@
 {
- "updated": "2026-08-03",
+ "updated": "2026-08-10",
  "schema": "v3.1",
- "top": 34,
+ "top": 32,
  "bottom": 7,
  "phase": "扩张期",
  "stage": "过热前期",
@@ -18,7 +18,7 @@
    "weight": 0.25,
    "metrics": {
     "premium_pct": 120.0,
-    "wow_pct": 3.27,
+    "wow_pct": 3.28,
     "weeks_down": 0
    },
    "fresh": true
@@ -90,13 +90,13 @@
   "source": "https://capitalandcompute.net/memory-prices/"
  },
  "spot": {
-  "latest_date": "2026-07-21",
-  "latest": 41.1,
-  "prev_date": "2026-07-15",
-  "prev": 39.8,
+  "latest_date": "2026-08-07",
+  "latest": 42.45,
+  "prev_date": "2026-07-21",
+  "prev": 41.1,
   "weeks_down": 0,
   "at_record": true,
-  "series_len": 13,
+  "series_len": 14,
   "source": "https://capitalandcompute.net/memory-prices/"
  },
  "sources": [
@@ -109,7 +109,7 @@
    "url": "https://www.trendforce.com/price/dram/dram_spot"
   }
  ],
- "note": "现货$41.1（创新高），连跌0周；股价距高点-41.5%",
+ "note": "现货$42.45（创新高），连跌0周；股价距高点-41.5%",
  "quarterly": [
   {
    "period": "2018Q1",
@@ -882,6 +882,27 @@
    "spot": 41.1,
    "wow": 3.27,
    "note": "现货$41.1（创新高），连跌0周；股价距高点-41.5%"
+  },
+  {
+   "period": "2026-08-10",
+   "s": [
+    10,
+    90,
+    55,
+    35,
+    80
+   ],
+   "top": 32,
+   "bottom": 7,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "high",
+   "kind": "周度实测",
+   "spot": 42.45,
+   "wow": 3.28,
+   "note": "现货$42.45（创新高），连跌0周；股价距高点-41.5%"
   }
  ],
  "disclaimer": "本页面为个人研究用途的公开信息聚合，由程序按固定规则自动生成，季度序列为历史规则重建而非实测，可能存在错误或延迟，不构成任何投资建议。"
