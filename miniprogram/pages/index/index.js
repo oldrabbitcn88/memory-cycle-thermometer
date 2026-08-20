@@ -74,7 +74,8 @@ Page({
 
   fmt(id, m){
     if(!m) return '';
-    if(id===1) return `现货周环比 ${m.wow_pct>0?'+':''}${m.wow_pct}% · 连跌 ${m.weeks_down||0} 周`;
+    // 不写「周环比」：数据源是不定期快照，相邻两点间隔 5~140 天，那个「周」字是假的
+    if(id===1) return `现货环比 ${m.wow_pct>0?'+':''}${m.wow_pct}% · 连跌 ${m.weeks_down||0} 期`;
     if(id===2) return `capex同比 ${m.yoy_pct}% · 新fab ${m.new_fabs||0} 座${m.new_entrant?' · 新玩家扩产':''}`;
     if(id===3) return `库存 ${m.weeks} 周${m.lta?' · 长约锁量':''}${m.sellout?' · 售罄话术':''}${m.cancel?' · 已现砍单':''}`;
     if(id===4) return `削减家数 ${m.n_cutting||0}${m.peaked?' · 增速见顶':''}${m.doubt?' · 回报率质疑':''}`;
