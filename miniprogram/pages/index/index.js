@@ -5,7 +5,7 @@ const colorOf = v => v<30?C.g : v<50?C.l : v<70?C.a : C.r;
 
 Page({
   data:{ loading:true, err:'', d:null, sig:[], topColor:'', botColor:'', tab:'weekly',
-         tempPct:0, tempOpen:false, spotTip:'' },
+         tempPct:0, tempOpen:false, botOpen:false, spotTip:'' },
   onLoad(){ this.fetch(); },
 
   // 开启右上角「转发给好友/群」。缺这个函数，微信会直接禁用转发入口。
@@ -84,6 +84,7 @@ Page({
   },
 
   toggleTemp(){ this.setData({tempOpen: !this.data.tempOpen}); },
+  toggleBot(){ this.setData({botOpen: !this.data.botOpen}); },
 
   toggle(e){ const i=e.currentTarget.dataset.i; this.setData({['sig['+i+'].open']:!this.data.sig[i].open}); },
   switchTab(e){ this.setData({tab:e.currentTarget.dataset.t}, ()=>this.draw(this.data.d)); },

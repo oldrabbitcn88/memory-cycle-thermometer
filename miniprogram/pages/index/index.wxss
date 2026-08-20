@@ -66,3 +66,5 @@
 .rule.on{background:#eef2ff;color:#1a1d23;font-weight:700}
 .rc{flex:1;min-width:0}
 .rs{margin-left:16rpx;font-variant-numeric:tabular-nums}
+.row.bot{margin-top:8rpx;padding-top:12rpx;border-top:1rpx dashed #e5e7eb}
+.row.bot .q{margin-left:12rpx}

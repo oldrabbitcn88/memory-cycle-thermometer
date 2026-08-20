@@ -23,7 +23,7 @@
         <view class="exp-p">温度是五个信号的加权合成分（②⑤两个慢变量已按连续亮灯期数衰减），代表当前离周期顶部的距离。回测 35 期里两轮周期都在 61–62 见顶、21–32 见底，上面那条尺的两端就是这些历史极值。</view>
         <view class="exp-p">方向由相位标签负责。同样是 36°，「扩张期」是在往上爬，「筑底期」是已经跌透——数字相同，含义相反，这也是原先要分两个温度的原因。</view>
         <view class="exp-p">温度峰值比实际周期顶部滞后 1–2 个季度，它是状态描述，不是择时信号。提前量在主触发器那里：回测两轮各提前 2 个季度，零误报。</view>
-        <view class="exp-p muted">底部温度 {{d.bottom}}°（用变化率构造，≥60 才算进入底部区间）。它不再占标题位，避免与行业温度混读。</view>
+        <view class="exp-p muted">另有一个「触底信号」（本期 {{d.bottom}}）回答的是另一个问题——反转条件凑齐了没有。它不是温度的另一端，详见下方指标卡里的说明。</view>
       </view>
     </view>
 
@@ -34,6 +34,27 @@
         <view wx:for="{{d.triggers}}" wx:key="*this">⚠ {{item}}</view>
       </view>
       <view class="row" wx:else><text class="k">主触发器</text><text class="v ok">未触发</text></view>
+
+      <view class="row bot" bindtap="toggleBot">
+        <text class="k">触底信号</text>
+        <text class="v" style="color:{{botColor}}">{{d.bottom}}<text class="q">{{botOpen ? '收起' : '怎么读 ›'}}</text></text>
+      </view>
+
+      <view class="exp" wx:if="{{botOpen && d.bottom_explain}}">
+        <view class="exp-p">{{d.bottom_explain.what}}</view>
+        <view class="exp-p">{{d.bottom_explain.why}}</view>
+
+        <view class="exp-h">四个分项</view>
+        <view class="rule {{r.score > 0 ? 'on' : ''}}" wx:for="{{d.bottom_explain.parts}}" wx:key="name" wx:for-item="r">
+          <text class="rc">{{r.name}} <text class="w">{{r.weight}}%</text></text><text class="rs">{{r.score}}</text>
+        </view>
+        <view class="exp-p" wx:for="{{d.bottom_explain.parts}}" wx:key="name" wx:for-item="r">· {{r.name}}：{{r.desc}}</view>
+
+        <view class="exp-h">怎么读</view>
+        <view class="exp-p">{{d.bottom_explain.gate}}</view>
+        <view class="exp-p" wx:if="{{d.bottom_explain.zero_note}}">{{d.bottom_explain.zero_note}}</view>
+        <view class="exp-note">{{d.bottom_explain.example}}</view>
+      </view>
     </view>
 
     <view class="card anchor {{d.equity_anchor.alert ? 'warn' : ''}}">
@@ -91,7 +112,7 @@
         <text class="tab {{tab==='quarterly'?'on':''}}" bindtap="switchTab" data-t="quarterly">季度重建(2018起)</text>
       </view>
       <canvas type="2d" id="ch" class="chart"></canvas>
-      <view class="legend"><text style="color:#dc2626">━ 行业温度</text><text style="color:#16a34a">━ 底部温度(辅助)</text><text class="muted">● 触发点</text></view>
+      <view class="legend"><text style="color:#dc2626">━ 行业温度</text><text style="color:#16a34a">━ 触底信号</text><text class="muted">● 触发点</text></view>
       <view class="tip" wx:if="{{tab==='quarterly'}}">季度序列为历史规则重建，非实测数据，仅供规则验证参考。</view>
     </view>
 

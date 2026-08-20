@@ -103,7 +103,8 @@ def main(dry_run=False, no_upload=False):
     wk = hist.get("weekly", [])
     prev_s = wk[-1]["s"] if wk else None
     prev_m = hist.get("last_metrics_mapped")
-    b = sc.bottom_score(scores, prev_s, metrics, prev_m) if prev_s and prev_m else {"total": 0}
+    b = (sc.bottom_score(scores, prev_s, metrics, prev_m) if prev_s and prev_m
+         else {"total": 0, "parts": [0, 0, 0, 0]})
 
     eq = sc.equity_anchor(eq_raw["price"], eq_raw["high_52w"], spot["at_record"]) if eq_raw else None
     if eq: eq.update(eq_raw)
@@ -142,6 +143,10 @@ def main(dry_run=False, no_upload=False):
                     for i in range(5)],
         # 历史温度区间，供页面标出当前值在历史上的位置（两轮周期峰值 61–62、谷值 21）
         "temp_range": temp_range,
+        # 触底信号（原「底部温度」）的分项与解释。JSON 字段名保持 bottom 不变，
+        # 只改展示名，以免线上旧版本代码包读不到。
+        "bottom_parts": b.get("parts", [0, 0, 0, 0]),
+        "bottom_explain": sc.explain_bottom(b.get("parts", [0, 0, 0, 0]), b["total"]),
         "equity_anchor": eq or {}, "spot": spot, "sources": sources, "note": note,
         "quarterly": hist["quarterly"], "weekly": hist["weekly"],
         "disclaimer": "本页面为个人研究用途的公开信息聚合，由程序按固定规则自动生成，"
