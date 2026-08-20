@@ -54,7 +54,7 @@
         <view class="val" style="color:{{s.color}}">{{s.score}}</view>
       </view>
       <view class="bar"><view class="fill" style="width:{{s.score}}%;background:{{s.color}}"></view></view>
-      <view class="met">{{s.metricText}}<text class="q">{{s.open ? '收起' : '打分逻辑 ›'}}</text></view>
+      <view class="met"><text class="mt">{{s.metricText}}</text><text class="q">{{s.open ? '收起' : '打分逻辑 ›'}}</text></view>
 
       <view class="exp" wx:if="{{s.open && s.explain}}">
         <view class="exp-h">统计范围与来源</view>
@@ -91,7 +91,7 @@
         <text class="tab {{tab==='quarterly'?'on':''}}" bindtap="switchTab" data-t="quarterly">季度重建(2018起)</text>
       </view>
       <canvas type="2d" id="ch" class="chart"></canvas>
-      <view class="legend"><text style="color:#dc2626">━ 顶部温度</text><text style="color:#16a34a">━ 底部温度</text><text class="muted">● 触发点</text></view>
+      <view class="legend"><text style="color:#dc2626">━ 行业温度</text><text style="color:#16a34a">━ 底部温度(辅助)</text><text class="muted">● 触发点</text></view>
       <view class="tip" wx:if="{{tab==='quarterly'}}">季度序列为历史规则重建，非实测数据，仅供规则验证参考。</view>
     </view>
 

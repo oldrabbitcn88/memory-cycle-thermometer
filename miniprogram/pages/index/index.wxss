@@ -29,7 +29,9 @@
 .val{font-size:44rpx;font-weight:800}
 .bar{height:10rpx;background:#eef0f3;border-radius:5rpx;overflow:hidden;margin:16rpx 0 10rpx}
 .fill{height:100%;border-radius:5rpx}
-.met{font-size:23rpx;color:#374151;line-height:1.6}
+.met{font-size:23rpx;color:#374151;line-height:1.6;display:flex;justify-content:space-between;align-items:baseline;gap:16rpx}
+.mt{flex:1;min-width:0}
+.met .q{flex-shrink:0}
 .tabs{display:flex;gap:10rpx;margin-bottom:16rpx}
 .tab{font-size:24rpx;padding:8rpx 22rpx;border-radius:99rpx;background:#f3f4f6;color:#6b7280}
 .tab.on{background:#1a1d23;color:#fff}
