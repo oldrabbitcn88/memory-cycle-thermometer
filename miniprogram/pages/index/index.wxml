@@ -18,6 +18,7 @@
     </view>
 
     <view class="card">
+      <view class="row"><text class="k">读数日期</text><text class="v">{{d.updated}}</text></view>
       <view class="row"><text class="k">亮灯计数</text><text class="v">≥50 共 {{d.n50}} 盏 · ≥75 共 {{d.n75}} 盏</text></view>
       <view class="trig" wx:if="{{d.triggers.length}}">
         <view wx:for="{{d.triggers}}" wx:key="*this">⚠ {{item}}</view>
