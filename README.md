@@ -31,9 +31,68 @@ DRAM/NAND 周期监测。每周一北京时间 08:30 自动运行：Claude 联�
 
 ## 部署
 
-Secrets：`ANTHROPIC_API_KEY`、`TCB_SECRET_ID`、`TCB_SECRET_KEY`、`TCB_ENV`。
-可选 Variables：`ANTHROPIC_BASE_URL`（默认中转网关）、`CLAUDE_MODEL`、`CLAUDE_MAX_TOKENS`。
+Secrets：`TCB_SECRET_ID`、`TCB_SECRET_KEY`；`TCB_ENV`（仅云开发后端需要）；
+`ANTHROPIC_API_KEY`（可选，只影响一句话点评）。
+Variables：`COS_BUCKET`、`COS_REGION`（COS 后端）、`ANTHROPIC_BASE_URL`、`CLAUDE_MODEL`。
 小程序端只需在 `config.js` 填 `dataUrl`，并把该域名加入 request 合法域名。
+
+### 数据托管：两种后端
+
+GitHub 只负责算，算完的 `data.json` 需要一个**已 ICP 备案的 HTTPS 域名**才能被小程序
+`wx.request` 读取——这是微信对服务器域名的硬性要求，GitHub Pages / jsDelivr 一律用不了。
+腾讯自有域名天然满足，故有两条路：
+
+| 后端 | 触发条件 | 域名形态 | 风险 |
+|---|---|---|---|
+| 云开发 Storage | 不设 `COS_BUCKET`，用 `TCB_ENV` | `xxx.tcb.qcloud.la` | 套餐到期/欠费 → 环境停服，整站返回 418 |
+| 普通 COS 桶 | 设 `COS_BUCKET` | `桶名.cos.<region>.myqcloud.com` | 与云开发计费解耦；每月成本约 ¥0.01 |
+
+`COS_BUCKET` 一经设置即优先，代码无需改动。负载实况：单文件 14.8 KB（gzip 3.2 KB），
+每周写一次，读取量等于小程序访问量——任何计费档下都是零头。
+
+### 为什么小程序端读的是「地址列表」而不是单个地址
+
+`config.js` 导出的是 `dataUrls` 数组，`index.js` 按顺序尝试，第一个成功的即采用
+（主源正常时不会多发请求，失败才降级）。这么做是因为微信有两条不对称的规则：
+
+- 改代码包里的地址 → 必须重新上传发布，**要过审核**
+- 改后台的 request 合法域名 → **不需要审核**，即时生效，每月限 5 次
+
+把候选地址预先写进代码包，换主机就只剩后台操作，代码包一行不用动，也就不必再提审。
+顺带一提，这里触发的是**审核**（免费的版本例行审查），不是**认证**（主体资质），
+两者无关，改数据地址不会引发重新认证。
+
+COS 的访问域名可以提前算出来：`{桶名}-{APPID}.cos.{地域}.myqcloud.com`，
+APPID 就是现有云开发地址尾段那串数字。所以桶还没建，地址就能先埋进包里。
+
+### 从云开发迁到 COS
+
+顺序很重要——先把后端备好再发版，避免上线当天走降级：
+
+1. 腾讯云控制台建桶，桶名与地域必须和 `config.js` 里预埋的地址一致
+   （当前预埋：`thermometer` / `ap-shanghai`），权限设为**公有读、私有写**。
+2. 仓库 Variables 加 `COS_BUCKET=thermometer-<APPID>`、`COS_REGION=ap-shanghai`。
+3. 手动跑一次 workflow，确认"上传到对象存储"步骤打印的 URL 与预埋地址一致。
+4. 小程序后台把 COS 域名加进 request 合法域名（云开发域名先保留，两个并存）。
+5. 上传代码包、提交审核、发布。
+6. 观察一两周，确认走的是 COS，再退订云开发个人版套餐。
+   退订后云开发地址返回 418，会被自动跳过，不需要再改代码。
+
+`TCB_SECRET_ID/KEY` 这对密钥两种后端通用，不必重配。
+
+### 成本
+
+云开发无法免费承载已发布的小程序：免费体验版虽有 3000 点/月，但**小程序发布后
+环境到期时间变更为上线后第 15 天**，且不支持按量付费；能长期用的最低档是个人版
+¥19.9/月（¥238.8/年）。COS 按量计费：标准存储约 ¥0.136/GB/月、外网下行 ¥0.5/GB。
+本项目单文件 14.8 KB、每周写一次，月访问一万次的流量费约 ¥0.07——**每年一两毛钱**。
+
+### 为什么计算与上传是分开的两步
+
+`update.py` 支持 `--dry-run` / `--no-upload` / `--upload-only`（`--help` 见文件末 USAGE）。
+workflow 的顺序是**先落盘、先提交、后上传**：对象存储挂掉只该导致"这周没推上去"，
+不该连当周读数一起丢。改之前上传是 `main()` 的最后一步，存储一旦不可用就会让整个 job
+失败，`git commit` 步骤根本轮不到执行——2026-08-19 环境停服后，下一个周一正会踩中。
 
 ## 口径一致性保障
 

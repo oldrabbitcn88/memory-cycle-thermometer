@@ -17,17 +17,43 @@ Page({
   },
   onPullDownRefresh(){ this.fetch(()=>wx.stopPullDownRefresh()); },
 
+  // 依次尝试 config.dataUrls 里的候选地址，第一个成功的即采用。
+  // 有了降级，换主机时新旧地址可以并存过渡，旧的停服后自动跳过，不必改代码重新提审。
   fetch(done){
     this.setData({loading:true, err:''});
-    wx.request({
-      url: cfg.dataUrl + '?t=' + Date.now(), method:'GET', dataType:'json',
-      success: res=>{
-        if(res.statusCode!==200){ this.fail('HTTP '+res.statusCode+'（403多为云存储权限未设为所有用户可读）'); }
-        else { this.render(typeof res.data==='string'? JSON.parse(res.data) : res.data); }
+    const urls = cfg.dataUrls && cfg.dataUrls.length ? cfg.dataUrls : [cfg.dataUrl];
+    const errs = [];
+    const hostOf = u => u.replace(/^https?:\/\//,'').split('/')[0];
+
+    const attempt = i => {
+      if(i >= urls.length){
+        this.fail('全部数据源均不可用（检查 request 合法域名与存储读权限）:\n' + errs.join('\n'));
         done&&done();
-      },
-      fail: e=>{ this.fail('请求失败（检查 dataUrl 与 request 合法域名）: '+e.errMsg); done&&done(); }
-    });
+        return;
+      }
+      wx.request({
+        url: urls[i] + '?t=' + Date.now(), method:'GET', dataType:'json', timeout:8000,
+        success: res=>{
+          if(res.statusCode!==200){
+            const hint = res.statusCode===403 ? '（存储权限未设为公有读）'
+                       : res.statusCode===418 ? '（云开发环境已停服）' : '';
+            errs.push(hostOf(urls[i])+' → HTTP '+res.statusCode+hint);
+            attempt(i+1);
+            return;
+          }
+          try {
+            this.render(typeof res.data==='string'? JSON.parse(res.data) : res.data);
+          } catch(e) {
+            errs.push(hostOf(urls[i])+' → 返回内容不是合法 JSON');
+            attempt(i+1);
+            return;
+          }
+          done&&done();
+        },
+        fail: e=>{ errs.push(hostOf(urls[i])+' → '+e.errMsg); attempt(i+1); }
+      });
+    };
+    attempt(0);
   },
   fail(msg){ this.setData({loading:false, err:msg}); },
 

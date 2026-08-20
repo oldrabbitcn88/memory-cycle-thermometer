@@ -20,15 +20,16 @@ jobs:
       - name: 安装依赖
         run: pip install requests tencentcloud-sdk-python cos-python-sdk-v5 anthropic
 
-      - name: 抓取 → 机械映射 → 上传
+      # 计算与上传拆成两步，且提交先于上传：
+      # 上传原本是 main() 的最后一步，一旦对象存储不可用（停服/欠费/回收），
+      # 整个 job 失败，后面的 git commit 根本不会执行，当周读数就此蒸发。
+      # 2026-08-19 环境停服时，下一个周一恰好会踩中这条路径。
+      - name: 抓取 → 机械映射 → 落盘
         env:
-          TCB_SECRET_ID:  ${{ secrets.TCB_SECRET_ID }}
-          TCB_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
-          TCB_ENV:        ${{ secrets.TCB_ENV }}
           # 以下均为可选：仅用于生成一句话点评，缺失或失败都不影响出分
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ANTHROPIC_BASE_URL: ${{ vars.ANTHROPIC_BASE_URL }}
-        run: python scripts/update.py
+        run: python scripts/update.py --no-upload
 
       - name: 回归自检（确保打分口径未漂移）
         run: python backtest/probe.py | tail -6
@@ -40,3 +41,15 @@ jobs:
           git add data/history_v3.json data/data.json
           git diff --cached --quiet || git commit -m "读数更新 $(date -u +%F)"
           git push
+
+      # 上传后端二选一，由 Variables 决定，无需改代码：
+      #   设了 COS_BUCKET  → 直传普通 COS 桶（与云开发计费解耦，推荐）
+      #   没设 COS_BUCKET  → 回落到云开发 Storage，用 TCB_ENV 反查桶名
+      - name: 上传到对象存储
+        env:
+          TCB_SECRET_ID:  ${{ secrets.TCB_SECRET_ID }}
+          TCB_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
+          TCB_ENV:        ${{ secrets.TCB_ENV }}
+          COS_BUCKET:     ${{ vars.COS_BUCKET }}
+          COS_REGION:     ${{ vars.COS_REGION }}
+        run: python scripts/update.py --upload-only

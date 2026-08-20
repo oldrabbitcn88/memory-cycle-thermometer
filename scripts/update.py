@@ -15,11 +15,15 @@ import json, os, sys, datetime
 import scoring as sc
 import fetcher
 
+# 上传后端二选一（详见 README「数据托管」）：
+#   ① 云开发 Storage：设 TCB_ENV，由 TCB API 反查桶名。环境停服/欠费即整站失联。
+#   ② 普通 COS 桶  ：设 COS_BUCKET（可选 COS_REGION），直连上传，与云开发计费解耦。
+# 两者共用同一对密钥；COS_BUCKET 一经设置即优先，此时 TCB_ENV 可留空。
 TCB_ID  = os.environ.get("TCB_SECRET_ID", "").strip()
 TCB_KEY = os.environ.get("TCB_SECRET_KEY", "").strip()
 TCB_ENV = os.environ.get("TCB_ENV", "").strip()
-if not (TCB_ID and TCB_KEY and TCB_ENV):
-    sys.exit("[错误] TCB_SECRET_ID / TCB_SECRET_KEY / TCB_ENV 不能为空")
+COS_BUCKET = os.environ.get("COS_BUCKET", "").strip()
+COS_REGION = os.environ.get("COS_REGION", "ap-shanghai").strip()
 CLOUD_PATH = os.environ.get("CLOUD_PATH", "data.json")
 TCB_REGION = os.environ.get("TCB_API_REGION", "ap-shanghai")
 
@@ -65,7 +69,7 @@ def optional_note(scores, spot, eq):
         return fallback
 
 
-def main():
+def main(dry_run=False, no_upload=False):
     hist = json.load(open(HIST, encoding="utf-8"))
     qin = json.load(open(QIN, encoding="utf-8"))
 
@@ -132,29 +136,63 @@ def main():
         "disclaimer": "本页面为个人研究用途的公开信息聚合，由程序按固定规则自动生成，"
                       "季度序列为历史规则重建而非实测，可能存在错误或延迟，不构成任何投资建议。",
     }
-    json.dump(hist, open(HIST, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     payload = json.dumps(data, ensure_ascii=False, indent=1).encode("utf-8")
-    open(OUT, "wb").write(payload)
     print(f"{today}: 五信号={scores} 顶温={r['total']} 底温={b['total']} 相位={phase} "
           f"触发={r['triggers'] or '无'} 股价背离={'是' if (eq and eq['alert']) else '否'}")
+    if dry_run:
+        print("[dry-run] 未写 history_v3.json / data.json，未上传")
+        return
+    json.dump(hist, open(HIST, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    open(OUT, "wb").write(payload)
+    if no_upload:
+        print("[跳过上传] 读数已落盘；上传由后续 --upload-only 步骤负责")
+        return
     upload(payload)
 
 
 def upload(content: bytes):
-    from tencentcloud.common import credential
-    from tencentcloud.tcb.v20180608 import tcb_client, models
+    """推送 data.json 到对象存储。COS_BUCKET 优先，否则回落到云开发 Storage。"""
+    if not (TCB_ID and TCB_KEY):
+        sys.exit("[错误] TCB_SECRET_ID / TCB_SECRET_KEY 不能为空")
     from qcloud_cos import CosConfig, CosS3Client
-    tcb = tcb_client.TcbClient(credential.Credential(TCB_ID, TCB_KEY), TCB_REGION)
-    req = models.DescribeEnvsRequest(); req.EnvId = TCB_ENV
-    envs = [e for e in (tcb.DescribeEnvs(req).EnvList or []) if e.EnvId == TCB_ENV]
-    if not envs or not envs[0].Storages:
-        sys.exit(f"[错误] 未找到环境 {TCB_ENV} 的存储信息")
-    st = envs[0].Storages[0]
-    CosS3Client(CosConfig(Region=st.Region, SecretId=TCB_ID, SecretKey=TCB_KEY)).put_object(
-        Bucket=st.Bucket, Key=CLOUD_PATH, Body=content,
-        ContentType="application/json; charset=utf-8", CacheControl="max-age=300")
-    print(f"上传成功: https://{st.CdnDomain}/{CLOUD_PATH}")
 
+    if COS_BUCKET:
+        bucket, region = COS_BUCKET, COS_REGION
+        domain = f"{COS_BUCKET}.cos.{COS_REGION}.myqcloud.com"
+    else:
+        if not TCB_ENV:
+            sys.exit("[错误] COS_BUCKET 与 TCB_ENV 至少设置一个，否则无处可传")
+        from tencentcloud.common import credential
+        from tencentcloud.tcb.v20180608 import tcb_client, models
+        tcb = tcb_client.TcbClient(credential.Credential(TCB_ID, TCB_KEY), TCB_REGION)
+        req = models.DescribeEnvsRequest(); req.EnvId = TCB_ENV
+        envs = [e for e in (tcb.DescribeEnvs(req).EnvList or []) if e.EnvId == TCB_ENV]
+        if not envs or not envs[0].Storages:
+            sys.exit(f"[错误] 未找到环境 {TCB_ENV} 的存储信息"
+                     f"（环境已停服/欠费/被回收时同样落到这里，先查云开发控制台）")
+        st = envs[0].Storages[0]
+        bucket, region, domain = st.Bucket, st.Region, st.CdnDomain
+
+    CosS3Client(CosConfig(Region=region, SecretId=TCB_ID, SecretKey=TCB_KEY)).put_object(
+        Bucket=bucket, Key=CLOUD_PATH, Body=content,
+        ContentType="application/json; charset=utf-8", CacheControl="max-age=300")
+    print(f"上传成功: https://{domain}/{CLOUD_PATH}")
+
+
+USAGE = """用法: python scripts/update.py [选项]
+  （无选项）      抓取 → 打分 → 落盘 → 上传
+  --dry-run       只抓取打分并打印，不写文件、不上传（本地预览用）
+  --no-upload     抓取打分并落盘，但不上传（上传交给 --upload-only）
+  --upload-only   不重新计算，直接把现有 data/data.json 推上去"""
 
 if __name__ == "__main__":
-    main()
+    argv = set(sys.argv[1:])
+    unknown = argv - {"--dry-run", "--no-upload", "--upload-only"}
+    if unknown:
+        sys.exit(f"[错误] 未知参数 {sorted(unknown)}" + chr(10) + USAGE)
+    if "--upload-only" in argv:
+        if not os.path.exists(OUT):
+            sys.exit(f"[错误] {OUT} 不存在，先跑一次不带 --upload-only 的更新")
+        upload(open(OUT, "rb").read())
+    else:
+        main(dry_run="--dry-run" in argv, no_upload="--no-upload" in argv)
