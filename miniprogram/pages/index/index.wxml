@@ -3,17 +3,27 @@
   <view wx:elif="{{err}}" class="center err">{{err}}</view>
   <block wx:else>
 
-    <view class="card duo">
-      <view class="half">
-        <view class="lbl">顶部温度</view>
-        <view class="big" style="color:{{topColor}}">{{d.top}}<text class="u">°</text></view>
-        <view class="phase" style="color:{{topColor}}">{{d.phase}}</view>
+    <view class="card temp" bindtap="toggleTemp">
+      <view class="lbl">行业温度<text class="q">{{tempOpen ? '收起' : '怎么读 ›'}}</text></view>
+      <view class="big" style="color:{{topColor}}">{{d.top}}<text class="u">°</text></view>
+      <view class="phase" style="color:{{topColor}}">{{d.phase}} · {{d.stage}}</view>
+
+      <view class="scale" wx:if="{{d.temp_range}}">
+        <view class="sbar"><view class="sdot" style="left:{{tempPct}}%;background:{{topColor}}"></view></view>
+        <view class="scap">
+          <text>历史最低 {{d.temp_range.min}}°</text>
+          <text class="muted">越高越接近周期顶部</text>
+          <text>最高 {{d.temp_range.max}}°</text>
+        </view>
       </view>
-      <view class="vline"></view>
-      <view class="half">
-        <view class="lbl">底部温度</view>
-        <view class="big" style="color:{{botColor}}">{{d.bottom}}<text class="u">°</text></view>
-        <view class="phase muted">{{d.bottom >= 60 ? '进入底部区间' : '非底部区域'}}</view>
+
+      <view class="hint">{{d.stage_desc}}</view>
+
+      <view class="exp" wx:if="{{tempOpen}}">
+        <view class="exp-p">温度是五个信号的加权合成分（②⑤两个慢变量已按连续亮灯期数衰减），代表当前离周期顶部的距离。回测 35 期里两轮周期都在 61–62 见顶、21–32 见底，上面那条尺的两端就是这些历史极值。</view>
+        <view class="exp-p">方向由相位标签负责。同样是 36°，「扩张期」是在往上爬，「筑底期」是已经跌透——数字相同，含义相反，这也是原先要分两个温度的原因。</view>
+        <view class="exp-p">温度峰值比实际周期顶部滞后 1–2 个季度，它是状态描述，不是择时信号。提前量在主触发器那里：回测两轮各提前 2 个季度，零误报。</view>
+        <view class="exp-p muted">底部温度 {{d.bottom}}°（用变化率构造，≥60 才算进入底部区间）。它不再占标题位，避免与行业温度混读。</view>
       </view>
     </view>
 
@@ -44,7 +54,35 @@
         <view class="val" style="color:{{s.color}}">{{s.score}}</view>
       </view>
       <view class="bar"><view class="fill" style="width:{{s.score}}%;background:{{s.color}}"></view></view>
-      <view class="met">{{s.metricText}}</view>
+      <view class="met">{{s.metricText}}<text class="q">{{s.open ? '收起' : '打分逻辑 ›'}}</text></view>
+
+      <view class="exp" wx:if="{{s.open && s.explain}}">
+        <view class="exp-h">统计范围与来源</view>
+        <view class="exp-p">{{s.explain.range}}</view>
+
+        <view class="exp-h">分档表</view>
+        <view class="rule {{r.cond === s.explain.hit ? 'on' : ''}}" wx:for="{{s.explain.rules}}" wx:key="cond" wx:for-item="r">
+          <text class="rc">{{r.cond}}</text><text class="rs">{{r.score}}</text>
+        </view>
+
+        <block wx:if="{{s.explain.adds.length}}">
+          <view class="exp-h">修饰项</view>
+          <view class="exp-p" wx:for="{{s.explain.adds}}" wx:key="*this">· {{item}}</view>
+        </block>
+
+        <view class="exp-h">本期</view>
+        <view class="exp-p">命中「{{s.explain.hit}}」，基础 {{s.explain.base}} 分{{s.explain.base === s.explain.final ? '' : '，修饰后 ' + s.explain.final + ' 分'}}</view>
+        <view class="exp-p" wx:if="{{s.explain.next}}">{{s.explain.next}}</view>
+        <view class="exp-p" wx:if="{{s.explain.role}}">{{s.explain.role}}</view>
+        <view class="exp-note" wx:if="{{s.explain.caveat}}">{{s.explain.caveat}}</view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{d.spot.series.length > 1}}">
+      <view class="k" style="margin-bottom:8rpx">现货价走势 · DDR4 1Gx8 3200MT/s</view>
+      <canvas type="2d" id="sp" class="chart" bindtouchstart="spotTouch" bindtouchmove="spotTouch"></canvas>
+      <view class="tip">{{spotTip || '点按或滑动图上任意位置查看该点读数'}}</view>
+      <view class="tip muted">数据源发布的是不定期官方快照，相邻两点间隔 5～140 天不等，横轴按读数序号等距排列，不是按真实时间比例。合约价无公开数据源，故只画现货一条线。</view>
     </view>
 
     <view class="card">

@@ -55,3 +55,11 @@ print("\n底部温度分布：")
 hi = [(r["q"], r["bot"], r["q"] in BOT) for r in rows if r["bot"] >= 60]
 for q, v, t in hi:
     print(f"  {q}: {v}分 {'◇真底部' if t else '（非标注底部）'}")
+
+print("\n解释层对账（规则表 vs scorer）：")
+_bad = sc.verify_explain()
+if _bad:
+    for _b in _bad:
+        print("  ✗ " + _b)
+    raise SystemExit("[错误] 展开说明的分档表已与 scoring.py 的实际打分不一致，先修表再发版")
+print("  通过：5 个信号的分档表与实际打分逐点一致")

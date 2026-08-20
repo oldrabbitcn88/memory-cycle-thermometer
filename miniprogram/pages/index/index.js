@@ -4,7 +4,8 @@ const C = { g:'#16a34a', l:'#a3b209', a:'#d97706', r:'#dc2626', b:'#2563eb' };
 const colorOf = v => v<30?C.g : v<50?C.l : v<70?C.a : C.r;
 
 Page({
-  data:{ loading:true, err:'', d:null, sig:[], topColor:'', botColor:'', tab:'weekly' },
+  data:{ loading:true, err:'', d:null, sig:[], topColor:'', botColor:'', tab:'weekly',
+         tempPct:0, tempOpen:false, spotTip:'' },
   onLoad(){ this.fetch(); },
 
   // 开启右上角「转发给好友/群」。缺这个函数，微信会直接禁用转发入口。
@@ -62,7 +63,12 @@ Page({
       ...s, color: colorOf(s.score), weightPct: Math.round(s.weight*100),
       metricText: this.fmt(s.id, s.metrics), open:false
     }));
-    this.setData({loading:false, d, sig, topColor:colorOf(d.top),
+    // 温度在历史区间中的位置。区间取自 data.json 的 temp_range（回测35期+周度实测），
+    // 因为温度的实际取值范围是 21–62 而非 0–100，不标区间读者无从判断高低。
+    const tr = d.temp_range || {min:0, max:100};
+    const span = Math.max(1, tr.max - tr.min);
+    const tempPct = Math.max(0, Math.min(100, (d.top - tr.min) / span * 100));
+    this.setData({loading:false, d, sig, tempPct, topColor:colorOf(d.top),
                   botColor: d.bottom>=60? C.g : '#9ca3af'}, ()=>this.draw(d));
   },
 
@@ -76,10 +82,70 @@ Page({
     return '';
   },
 
+  toggleTemp(){ this.setData({tempOpen: !this.data.tempOpen}); },
+
   toggle(e){ const i=e.currentTarget.dataset.i; this.setData({['sig['+i+'].open']:!this.data.sig[i].open}); },
   switchTab(e){ this.setData({tab:e.currentTarget.dataset.t}, ()=>this.draw(this.data.d)); },
 
+
+  // 现货价走势。数据源发布的是不定期官方快照（相邻两点间隔 5~140 天不等），
+  // 因此横轴按序号等距排列而非按真实时间比例——这一点在图下方注明。
+  drawSpot(d){
+    const src = (d.spot && d.spot.series) || [];
+    if(src.length < 2) return;
+    wx.createSelectorQuery().select('#sp').fields({node:true,size:true}).exec(res=>{
+      if(!res || !res[0]) return;
+      const {node:cv, width, height} = res[0];
+      const dpr = wx.getWindowInfo().pixelRatio || 2;
+      cv.width = width*dpr; cv.height = height*dpr;
+      const ctx = cv.getContext('2d'); ctx.scale(dpr,dpr); ctx.clearRect(0,0,width,height);
+
+      const P = {l:34, r:10, t:14, b:20}, w = width-P.l-P.r, h = height-P.t-P.b;
+      const vs = src.map(o=>o.p);
+      const lo = Math.min.apply(null, vs), hi = Math.max.apply(null, vs);
+      const pad = (hi-lo)*0.12 || 1;
+      const y0 = lo-pad, y1 = hi+pad;
+      const y = v => P.t + h*(1-(v-y0)/(y1-y0));
+      const x = i => P.l + w*i/(src.length-1);
+
+      ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1; ctx.fillStyle='#c9c9c9'; ctx.font='9px sans-serif';
+      [y0, (y0+y1)/2, y1].forEach(v=>{
+        ctx.beginPath(); ctx.moveTo(P.l, y(v)); ctx.lineTo(width-P.r, y(v)); ctx.stroke();
+        ctx.fillText('$'+v.toFixed(0), 4, y(v)+3);
+      });
+
+      ctx.strokeStyle = C.b; ctx.lineWidth = 2; ctx.beginPath();
+      src.forEach((o,i)=> i ? ctx.lineTo(x(i), y(o.p)) : ctx.moveTo(x(i), y(o.p)));
+      ctx.stroke();
+      ctx.fillStyle = C.b;
+      src.forEach((o,i)=>{ ctx.beginPath(); ctx.arc(x(i), y(o.p), 2.5, 0, 6.284); ctx.fill(); });
+
+      ctx.fillStyle='#9ca3af'; ctx.font='9px sans-serif';
+      ctx.fillText(src[0].d.slice(2), P.l-4, height-5);
+      ctx.fillText(src[src.length-1].d.slice(2), width-P.r-34, height-5);
+
+      // 存下坐标供触摸取点
+      this._sp = src.map((o,i)=>({x:x(i), d:o.d, p:o.p}));
+    });
+  },
+
+  // 点/滑图上任意位置，显示最近那个数据点的日期与价格。
+  // 只有 13 个点、一屏画得下，所以做取点而不是平移——平移在这个点数下是过度设计。
+  spotTouch(e){
+    const pts = this._sp;
+    if(!pts || !pts.length || !e.touches || !e.touches[0]) return;
+    const tx = e.touches[0].x;
+    let best = pts[0];
+    for(const q of pts){ if(Math.abs(q.x-tx) < Math.abs(best.x-tx)) best = q; }
+    const i = pts.indexOf(best);
+    const prev = i>0 ? pts[i-1] : null;
+    const chg = prev ? ((best.p/prev.p-1)*100) : null;
+    this.setData({spotTip: best.d + '  $' + best.p.toFixed(2)
+      + (chg===null ? '' : '  较上一读数 ' + (chg>0?'+':'') + chg.toFixed(1) + '%')});
+  },
+
   draw(d){
+    this.drawSpot(d);
     const src = this.data.tab==='weekly' ? (d.weekly||[]) : (d.quarterly||[]);
     if(src.length<2) return;
     wx.createSelectorQuery().select('#ch').fields({node:true,size:true}).exec(res=>{

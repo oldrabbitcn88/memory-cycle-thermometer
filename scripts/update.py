@@ -32,7 +32,7 @@ HIST = os.path.join(ROOT, "data", "history_v3.json")
 QIN  = os.path.join(ROOT, "data", "quarterly_inputs.json")
 OUT  = os.path.join(ROOT, "data", "data.json")
 
-NAMES = ["现货价 vs 合约价", "设备商存储订单", "下游库存与囤货", "需求引擎(AI capex)", "卖方一致性与话术"]
+NAMES = ["现货价动能", "设备商存储订单", "下游库存与囤货", "需求引擎(AI capex)", "卖方一致性与话术"]
 LEADS = ["领先1–2季度 · 主触发器", "领先12–18个月 · 背景条件", "领先2–3季度",
          "核心变量 · 门槛条件", "反向指标 · 背景条件"]
 
@@ -85,7 +85,9 @@ def main(dry_run=False, no_upload=False):
     # --- 第二层：季度指标（人工维护，带新鲜度标记）---
     clean = lambda d: {k: v for k, v in d.items() if not k.startswith("_")}
     metrics = [
-        {"premium_pct": 120.0, "wow_pct": round(wow, 2), "weeks_down": spot["weeks_down"]},
+        # premium_pct 无数据源，是写死的假设值，不参与实际判档（详见 scoring.explain_spot）
+        {"premium_pct": sc.SPOT_PREMIUM_ASSUMED, "wow_pct": round(wow, 2),
+         "weeks_down": spot["weeks_down"]},
         clean(qin["capex"]), clean(qin["inventory"]), clean(qin["demand"]), clean(qin["narrative"]),
     ]
     prev_q = hist.get("last_quarterly_asof", {})
@@ -109,6 +111,12 @@ def main(dry_run=False, no_upload=False):
     note = optional_note(scores, spot, eq)
     today = bj_today()
 
+    # 解释层：分档表由 scoring.py 生成，probe.py 每次运行都会与实际打分对账
+    explains = sc.explain_all(metrics)
+
+    all_tops = [x["top"] for x in hist["quarterly"]] + [w["top"] for w in wk] + [r["total"]]
+    temp_range = {"min": min(all_tops), "max": max(all_tops), "n": len(all_tops)}
+
     entry = {"period": today, "s": scores, "top": r["total"], "bottom": b["total"],
              "phase": phase, "n50": r["n50"], "n75": r["n75"], "trig": bool(r["triggers"]),
              "conf": "high", "kind": "周度实测", "spot": spot["latest"],
@@ -130,7 +138,10 @@ def main(dry_run=False, no_upload=False):
         "n50": r["n50"], "n75": r["n75"], "triggers": r["triggers"],
         "signals": [{"id": i+1, "name": NAMES[i], "lead": LEADS[i], "score": scores[i],
                      "weight": sc.WEIGHTS[i], "metrics": metrics[i],
-                     "fresh": fresh.get(NAMES[i], True)} for i in range(5)],
+                     "fresh": fresh.get(NAMES[i], True), "explain": explains[i]}
+                    for i in range(5)],
+        # 历史温度区间，供页面标出当前值在历史上的位置（两轮周期峰值 61–62、谷值 21）
+        "temp_range": temp_range,
         "equity_anchor": eq or {}, "spot": spot, "sources": sources, "note": note,
         "quarterly": hist["quarterly"], "weekly": hist["weekly"],
         "disclaimer": "本页面为个人研究用途的公开信息聚合，由程序按固定规则自动生成，"

@@ -143,10 +143,12 @@ def compose(scores: list, factors: list, phase: str = "扩张期") -> dict:
         stage, desc = "景气上行期", "信号面干净，主要风险是踏空而非站岗。"
     elif total < 50:
         stage, desc = "过热前期", "上行动能仍在，供给端/叙事端开始积累矛盾。"
-    elif total < 70:
+    elif total < 60:
         stage, desc = "过热中期 → 顶部预警", "距拐点历史上约6–12个月，应制定退出触发条件。"
     else:
-        stage, desc = "拐点临近", "加权总分已进入高位区间。"
+        # 阈值按两轮周期的实际峰值标定：2018 轮最高 61、2022 轮最高 62。
+        # 原阈值 70 在 35 期回测中从未触及，那条分支是死代码。
+        stage, desc = "拐点临近", "温度已进入历史顶部区间（两轮周期峰值 61–62）。"
 
     return {"total": total, "eff": [round(e, 1) for e in eff],
             "n50": n50, "n75": n75, "triggers": triggers, "phase": phase,
@@ -238,3 +240,210 @@ def equity_anchor(etf_price: float, etf_high: float, spot_at_record: bool) -> di
         "note": ("股价已深度回撤而现货仍创新高——前瞻定价先于现货转向，"
                  "2018/2022两轮均出现此形态" if alert else "股价与现货未见显著背离"),
     }
+
+
+# ---------- 解释层：把打分规则翻译成可读说明 ----------
+# 说明文本不手写。手写的 prose 迟早和代码漂移，而本项目的全部卖点就是
+# "打分规则集中在 scoring.py，不可能出现两套口径"。
+# 这里把分档表写成数据，再用 verify_explain() 在输入网格上逐点比对
+# 表与真实 scorer 的输出——表一旦和 scorer 不一致，probe.py 立刻报错。
+
+SPOT_PREMIUM_ASSUMED = 120.0   # 见 update.py：合约价无数据源，这是写死的假设值
+
+
+def _base(rules, hit):
+    """分档表里命中档的基础分（尚未叠加修饰项）。"""
+    for r in rules:
+        if r["cond"] == hit:
+            return r["score"]
+    return None
+
+
+def _fmt(x):
+    return str(int(x)) if isinstance(x, float) and x == int(x) else str(x)
+
+
+def explain_spot(m):
+    """① 现货价动能。premium_pct 是假设常量，实际起作用的只有 wow 与 weeks_down。"""
+    wow, wd = m.get("wow_pct", 0.0), m.get("weeks_down", 0)
+    rules = [
+        {"cond": "现货环比上涨", "score": 10},
+        {"cond": "现货环比下跌或持平", "score": 30},
+        {"cond": "连续下跌 ≥2 期", "score": "至少 38"},
+        {"cond": "连续下跌 ≥4 期", "score": "至少 55"},
+    ]
+    if wd >= 4:   hit = "连续下跌 ≥4 期"
+    elif wd >= 2: hit = "连续下跌 ≥2 期"
+    elif wow > 0: hit = "现货环比上涨"
+    else:         hit = "现货环比下跌或持平"
+    nxt = ("再跌 %d 期跳到「至少 38」——那正是主触发器对本信号的门槛" % (2 - wd)
+           if wd < 2 else
+           "再跌 %d 期跳到「至少 55」" % (4 - wd) if wd < 4 else "已在最高档")
+    return {
+        "range": "DDR4 1Gx8 3200MT/s 主流现货价，来源 TrendForce / DRAMeXchange 官方快照"
+                 "（经 Capital & Compute 聚合的免费公开部分）。数据源按不定期发布，非严格周频。",
+        "rules": rules, "hit": hit, "next": nxt,
+        "base": _base(rules, hit), "final": score_spot_contract(m),
+        "role": "主触发器三要素之一，门槛 ≥38（即「动能转负」档）",
+        "caveat": "本信号原名「现货价 vs 合约价」，但合约价无公开数据源，"
+                  "溢价 %s%% 是写死的假设值、不参与实际判档，故更名为「现货价动能」。"
+                  % _fmt(SPOT_PREMIUM_ASSUMED),
+    }
+
+
+def explain_capex(m):
+    """② 设备商存储订单"""
+    y = m["yoy_pct"]
+    rules = [{"cond": "capex 同比 ≤0%", "score": 15}, {"cond": "0–15%", "score": 35},
+             {"cond": "15–30%", "score": 55}, {"cond": "≥30%", "score": 75}]
+    hit = "≥30%" if y >= 30 else "15–30%" if y >= 15 else "0–15%" if y > 0 else "capex 同比 ≤0%"
+    add = []
+    if m.get("new_fabs", 0) >= 2: add.append("在建/新宣布 fab ≥2 座 +10")
+    if m.get("new_entrant"):      add.append("有新玩家扩产 +5")
+    return {
+        "range": "三大存储原厂（三星/海力士/美光）资本开支同比，季度更新，"
+                 "取自各家财报与设备商（ASML/AMAT/Lam）订单指引。本期数值 asof %s。"
+                 % m.get("asof", "—"),
+        "rules": rules, "hit": hit, "adds": add,
+        "base": _base(rules, hit), "final": score_capex(m),
+        "next": "capex 同比跌破 30% 降到 55 档；跌破 15% 降到 35 档",
+        "role": "主触发器三要素之一，门槛 ≥55（即「供给扩张已确立」）",
+        "caveat": "慢变量：连续亮灯超过 2 期后按每期 12% 衰减（下限 40%），"
+                  "避免存量风险向总温度贡献恒定底噪。",
+    }
+
+
+def explain_inventory(m):
+    """③ 下游库存与囤货"""
+    w = m["weeks"]
+    rules = [{"cond": "已出现砍单/毁约", "score": 85}, {"cond": "库存 >10 周", "score": 80},
+             {"cond": "库存 8–10 周", "score": 65}, {"cond": "库存 6–8 周", "score": 55},
+             {"cond": "库存 <6 周", "score": 20}]
+    if m.get("cancel"): hit = "已出现砍单/毁约"
+    elif w > 10:        hit = "库存 >10 周"
+    elif w >= 8:        hit = "库存 8–10 周"
+    elif w >= 6:        hit = "库存 6–8 周"
+    else:               hit = "库存 <6 周"
+    add = []
+    if m.get("lta") and m.get("sellout"): add.append("长约锁量 + 售罄话术 → 下限抬到 55")
+    elif m.get("lta"):                    add.append("长约锁量 → 下限抬到 40")
+    cur = score_inventory(m)
+    nxt = "已在最高档"
+    for need, band, val in ((6, "6–8 周", 55), (8, "8–10 周", 65), (10.01, ">10 周", 80)):
+        if val > cur and w < need:
+            nxt = "库存再涨 %s 周进入 %s档（%d 分）" % (_fmt(round(need - w, 1)), band, val)
+            break
+    return {
+        "range": "下游模组厂与终端客户的存货周数，季度更新，来自厂商财报存货天数与渠道调研。"
+                 "本期数值 asof %s。" % m.get("asof", "—"),
+        "rules": rules, "hit": hit, "adds": add, "next": nxt,
+        "base": _base(rules, hit), "final": cur,
+        "caveat": "「砍单」是一票否决式的最高档：它直接给 85，不再看库存周数——"
+                  "历史上砍单出现时，周期顶部基本已经确认。",
+    }
+
+
+def explain_demand(m):
+    """④ 需求引擎(AI capex)"""
+    rules = [{"cond": "≥2 家大客户明确削减/推迟", "score": 85},
+             {"cond": "1 家削减", "score": 65},
+             {"cond": "增速见顶（无人削减）", "score": 50},
+             {"cond": "出现回报率质疑", "score": 35},
+             {"cond": "以上皆无", "score": 20}]
+    n = m.get("n_cutting", 0)
+    hit = ("≥2 家大客户明确削减/推迟" if n >= 2 else "1 家削减" if n == 1 else
+           "增速见顶（无人削减）" if m.get("peaked") else
+           "出现回报率质疑" if m.get("doubt") else "以上皆无")
+    return {
+        "range": "统计范围为超大规模云厂商（微软/谷歌/亚马逊/Meta/甲骨文等）的 AI 资本开支指引，"
+                 "季度更新，以公开财报电话会中的明确表述为准。本期数值 asof %s。" % m.get("asof", "—"),
+        "rules": rules, "hit": hit,
+        "base": _base(rules, hit), "final": score_demand(m),
+        "next": "任一家明确削减即跳到 65；两家跳到 85",
+        "role": "主触发器三要素之一，门槛 ≥35（即「需求已现裂痕」）",
+    }
+
+
+def explain_narrative(m):
+    """⑤ 卖方一致性与话术"""
+    rules = [{"cond": "短缺预测覆盖 >3 年", "score": 80}, {"cond": ">2 年", "score": 60},
+             {"cond": ">1 年", "score": 40}, {"cond": "≤1 年", "score": 20}]
+    y = m["years_out"]
+    hit = "短缺预测覆盖 >3 年" if y > 3 else ">2 年" if y > 2 else ">1 年" if y > 1 else "≤1 年"
+    add = []
+    if m.get("mega"): add.append("龙头上市/巨额融资 +10")
+    if m.get("bears"): add.append("每有 1 方公开看空 −10（最多 −20），本期 %d 方" % m["bears"])
+    return {
+        "range": "统计范围为主流卖方研究与产业媒体对存储短缺持续时间的一致预期，"
+                 "季度更新。本期数值 asof %s。" % m.get("asof", "—"),
+        "rules": rules, "hit": hit, "adds": add,
+        "base": _base(rules, hit), "final": score_narrative(m),
+        "caveat": "反向指标：一致性越强、预测越远，越接近周期顶部。"
+                  "与②同为慢变量，连续亮灯超过 2 期后按每期 12% 衰减。",
+    }
+
+
+EXPLAINERS = [explain_spot, explain_capex, explain_inventory, explain_demand, explain_narrative]
+
+
+def explain_all(metrics):
+    return [EXPLAINERS[i](metrics[i]) for i in range(5)]
+
+
+def verify_explain():
+    """在输入网格上逐点比对「规则表」与真实 scorer。
+
+    校验方式：把各信号的修饰项（fab 数、长约、砍单、看空方数等）全部置于默认值，
+    此时 explain 声明的命中档位分数必须等于 scorer 的实际输出。
+    修饰项本身另行断言其方向与幅度。返回问题列表，空列表即通过。
+    """
+    bad = []
+
+    def chk(tag, expect, actual, ctx):
+        if expect != actual:
+            bad.append("%s: 表说 %s，scorer 给 %s（输入 %s）" % (tag, expect, actual, ctx))
+
+    def base_of(ex):
+        for r in ex["rules"]:
+            if r["cond"] == ex["hit"]:
+                return r["score"]
+        bad.append("命中档 %r 不在规则表内" % ex["hit"])
+        return None
+
+    # ① 现货动能：wd=0 时只由 wow 决定
+    for wow in (-8.0, -0.5, 0.0, 0.01, 3.28, 12.0):
+        m = {"premium_pct": SPOT_PREMIUM_ASSUMED, "wow_pct": wow, "weeks_down": 0}
+        chk("①", base_of(explain_spot(m)), score_spot_contract(m), m)
+    for wd, floor in ((2, 38), (3, 38), (4, 55), (7, 55)):
+        m = {"premium_pct": SPOT_PREMIUM_ASSUMED, "wow_pct": -1.0, "weeks_down": wd}
+        s = score_spot_contract(m)
+        if s < floor:
+            bad.append("①: 连跌%d期应 ≥%d，实得 %d" % (wd, floor, s))
+
+    # ② capex：无 fab 加成、无新玩家
+    for y in (-10, 0, 1, 14.9, 15, 29.9, 30, 60):
+        m = {"yoy_pct": y, "new_fabs": 0, "new_entrant": False}
+        chk("②", base_of(explain_capex(m)), score_capex(m), m)
+    chk("②fab", score_capex({"yoy_pct": 40, "new_fabs": 0, "new_entrant": False}) + 10,
+        score_capex({"yoy_pct": 40, "new_fabs": 2, "new_entrant": False}), "new_fabs=2")
+
+    # ③ 库存：无砍单、无长约
+    for w in (0, 5.9, 6, 7.9, 8, 10, 10.1, 14):
+        m = {"weeks": w, "lta": False, "sellout": False, "cancel": False}
+        chk("③", base_of(explain_inventory(m)), score_inventory(m), m)
+    m = {"weeks": 3.5, "lta": True, "sellout": True, "cancel": False}
+    chk("③长约", 55, score_inventory(m), m)
+
+    # ④ 需求：规则表即全部逻辑
+    for n, pk, db in ((0, False, False), (0, False, True), (0, True, False), (1, False, False), (3, True, True)):
+        m = {"n_cutting": n, "peaked": pk, "doubt": db}
+        chk("④", base_of(explain_demand(m)), score_demand(m), m)
+
+    # ⑤ 叙事：无 mega、无看空
+    for y in (0.5, 1, 1.5, 2, 2.5, 3, 4.0):
+        m = {"years_out": y, "bears": 0, "mega": False}
+        chk("⑤", base_of(explain_narrative(m)), score_narrative(m), m)
+    chk("⑤看空", score_narrative({"years_out": 4.0, "bears": 0, "mega": False}) - 20,
+        score_narrative({"years_out": 4.0, "bears": 3, "mega": False}), "bears=3（封顶 −20）")
+
+    return bad

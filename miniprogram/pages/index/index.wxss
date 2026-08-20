@@ -39,3 +39,28 @@
 .src{font-size:23rpx;color:#2563eb;padding:10rpx 0;border-top:1rpx dashed #e5e7eb}
 .surl{color:#9ca3af;font-size:20rpx;word-break:break-all;display:block;margin-top:2rpx}
 .disc{font-size:21rpx;color:#9ca3af;line-height:1.7;padding:10rpx 16rpx 30rpx;text-align:center}
+
+/* 单一行业温度卡 */
+.temp{text-align:center}
+.temp .lbl{display:flex;justify-content:center;align-items:baseline;gap:12rpx}
+.q{font-size:21rpx;color:#2563eb;font-weight:400}
+.scale{margin:22rpx 4rpx 0}
+.sbar{position:relative;height:8rpx;border-radius:4rpx;
+      background:linear-gradient(90deg,#16a34a 0%,#a3b209 38%,#d97706 68%,#dc2626 100%)}
+.sdot{position:absolute;top:50%;width:22rpx;height:22rpx;margin-left:-11rpx;border-radius:50%;
+      border:4rpx solid #fff;box-shadow:0 0 0 1rpx #d1d5db;transform:translateY(-50%)}
+.scap{display:flex;justify-content:space-between;font-size:19rpx;color:#9ca3af;margin-top:12rpx}
+.hint{font-size:22rpx;color:#6b7280;line-height:1.6;margin-top:16rpx}
+
+/* 展开的说明区 */
+.exp{margin-top:18rpx;padding-top:16rpx;border-top:1rpx dashed #e5e7eb;text-align:left}
+.exp-h{font-size:21rpx;color:#9ca3af;font-weight:600;margin:14rpx 0 6rpx}
+.exp-h:first-child{margin-top:0}
+.exp-p{font-size:22rpx;color:#374151;line-height:1.7}
+.exp-note{font-size:21rpx;color:#6b7280;line-height:1.7;margin-top:12rpx;
+          background:#f9fafb;border-left:4rpx solid #e5e7eb;padding:12rpx 14rpx;border-radius:0 8rpx 8rpx 0}
+.rule{display:flex;justify-content:space-between;align-items:center;font-size:22rpx;
+      color:#6b7280;padding:7rpx 12rpx;border-radius:8rpx}
+.rule.on{background:#eef2ff;color:#1a1d23;font-weight:700}
+.rc{flex:1;min-width:0}
+.rs{margin-left:16rpx;font-variant-numeric:tabular-nums}

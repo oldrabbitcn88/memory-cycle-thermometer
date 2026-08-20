@@ -48,7 +48,10 @@ def fetch_spot():
     return {"latest_date": latest[0], "latest": latest[1],
             "prev_date": prev[0], "prev": prev[1],
             "weeks_down": wd, "at_record": at_record,
-            "series_len": len(series), "source": SRC_SPOT}
+            "series_len": len(series), "source": SRC_SPOT,
+            # 完整序列供小程序画图。注意数据源发布的是"selected official readings"，
+            # 日期不规则（相邻两点间隔 5~140 天不等），不是严格周频。
+            "series": [{"d": d, "p": p} for d, p in series]}
 
 
 def fetch_equity():
