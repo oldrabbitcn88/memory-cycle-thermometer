@@ -25,6 +25,7 @@ jobs:
       # 整个 job 失败，后面的 git commit 根本不会执行，当周读数就此蒸发。
       # 2026-08-19 环境停服时，下一个周一恰好会踩中这条路径。
       - name: 抓取 → 机械映射 → 落盘
+        id: compute
         env:
           # 以下均为可选：仅用于生成一句话点评，缺失或失败都不影响出分
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -32,20 +33,32 @@ jobs:
         run: python scripts/update.py --no-upload
 
       - name: 回归自检（确保打分口径未漂移）
-        run: python backtest/probe.py | tail -6
+        id: selfcheck
+        run: python backtest/probe.py | tail -8
 
       - name: 提交历史回仓库
         run: |
           git config user.name "thermometer-bot"
           git config user.email "bot@users.noreply.github.com"
           git add data/history_v3.json data/data.json
-          git diff --cached --quiet || git commit -m "读数更新 $(date -u +%F)"
-          git push
+          if git diff --cached --quiet; then
+            echo "本期读数与仓库一致，无需提交"
+          else
+            git commit -m "读数更新 $(date -u +%F)"
+            # 远端可能已被人工提交推进；若本次是对旧 run 的 re-run，checkout 还会停在
+            # 旧 commit 上，直接 push 必被拒。先 rebase 到远端最新再推。
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
 
       # 上传后端二选一，由 Variables 决定，无需改代码：
       #   设了 COS_BUCKET  → 直传普通 COS 桶（与云开发计费解耦，推荐）
       #   没设 COS_BUCKET  → 回落到云开发 Storage，用 TCB_ENV 反查桶名
+      # 只要读数算出来了且自检通过，就必须传——提交失败（推送被拒、远端跑在前面）
+      # 不该连带让数据到不了用户手里。反过来，提交在上传之前，上传挂了也不丢读数。
+      # 两个方向都堵上，这两步才真正互不阻塞。
       - name: 上传到对象存储
+        if: always() && steps.compute.outcome == 'success' && steps.selfcheck.outcome == 'success'
         env:
           TCB_SECRET_ID:  ${{ secrets.TCB_SECRET_ID }}
           TCB_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
