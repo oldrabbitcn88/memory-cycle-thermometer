@@ -857,23 +857,23 @@
    "kind": "周度实测",
    "spot": 42.45,
    "wow": 3.28,
-   "note": "现货$42.45（创新高），连跌0周；股价距高点-37.8%"
+   "note": "现货$42.45（创新高），连续下跌0期；市场定价距高点-37.8%"
   }
  ],
  "equity_anchor": {
   "drawdown_pct": -37.8,
   "alert": true,
-  "note": "股价已深度回撤而现货仍创新高——前瞻定价先于现货转向，2018/2022两轮均出现此形态",
+  "note": "资本市场已深度回撤而现货仍创新高——前瞻定价先于现货转向，2018/2022两轮均出现此形态",
   "price": 50.6,
   "high_52w": 81.34,
   "source": "https://capitalandcompute.net/memory-prices/"
  },
  "streak_carryover": [
   0,
-  19,
-  11,
+  20,
+  12,
   0,
-  11
+  12
  ],
  "last_metrics_mapped": [
   {
