@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """确定性数据抓取层：不依赖任何 LLM 或网关搜索能力。
-最时效敏感的两项（现货价、股价锚）由正则直接解析，失败即报错，不猜。"""
+最时效敏感的两项（现货价、市场定价锚）由正则直接解析，失败即报错，不猜。"""
 import re, sys
 import requests
 
@@ -68,4 +68,4 @@ def fetch_equity():
 if __name__ == "__main__":
     s = fetch_spot()
     print("现货:", s)
-    print("股价锚:", fetch_equity())
+    print("市场定价锚:", fetch_equity())

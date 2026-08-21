@@ -22,7 +22,7 @@
       <view class="exp" wx:if="{{tempOpen}}">
         <view class="exp-p">温度是五个信号的加权合成分（②⑤两个慢变量已按连续亮灯期数衰减），代表当前离周期顶部的距离。回测 35 期里两轮周期都在 61–62 见顶、21–32 见底，上面那条尺的两端就是这些历史极值。</view>
         <view class="exp-p">方向由相位标签负责。同样是 36°，「扩张期」是在往上爬，「筑底期」是已经跌透——数字相同，含义相反，这也是原先要分两个温度的原因。</view>
-        <view class="exp-p">温度峰值比实际周期顶部滞后 1–2 个季度，它是状态描述，不是择时信号。提前量在主触发器那里：回测两轮各提前 2 个季度，零误报。</view>
+        <view class="exp-p">温度峰值比实际周期顶部滞后 1–2 个季度，它描述的是产业当前所处的位置，而非对未来的预判。提前量在主触发器那里：回测两轮各提前 2 个季度，零误报。</view>
         <view class="exp-p muted">另有一个「触底信号」（本期 {{d.bottom}}）回答的是另一个问题——反转条件凑齐了没有。它不是温度的另一端，详见下方指标卡里的说明。</view>
       </view>
     </view>
@@ -58,7 +58,7 @@
     </view>
 
     <view class="card anchor {{d.equity_anchor.alert ? 'warn' : ''}}">
-      <view class="row"><text class="k">市场定价锚 · DRAM ETF</text>
+      <view class="row"><text class="k">市场定价锚 · DRAM</text>
         <text class="v" style="color:{{d.equity_anchor.drawdown_pct <= -25 ? '#dc2626' : '#374151'}}">
           {{d.equity_anchor.drawdown_pct}}%（距高点）</text></view>
       <view class="anote">{{d.equity_anchor.note}}</view>

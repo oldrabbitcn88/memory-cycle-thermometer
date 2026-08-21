@@ -70,7 +70,7 @@ def score_demand(m: dict) -> int:
 
 
 def score_narrative(m: dict) -> int:
-    """⑤ years_out=短缺预测覆盖年数，bears=公开看空方数量，mega=龙头上市/巨额融资"""
+    """⑤ years_out=短缺预期覆盖年数，bears=公开提出异议的机构数，mega=龙头上市/巨额融资"""
     y = m["years_out"]
     if y > 3:    s = 80
     elif y > 2:  s = 60
@@ -144,7 +144,7 @@ def compose(scores: list, factors: list, phase: str = "扩张期") -> dict:
     elif total < 50:
         stage, desc = "过热前期", "上行动能仍在，供给端/叙事端开始积累矛盾。"
     elif total < 60:
-        stage, desc = "过热中期 → 顶部预警", "距拐点历史上约6–12个月，应制定退出触发条件。"
+        stage, desc = "过热中期 → 顶部预警", "供需矛盾持续积累，历史上距周期转折约6–12个月。"
     else:
         # 阈值按两轮周期的实际峰值标定：2018 轮最高 61、2022 轮最高 62。
         # 原阈值 70 在 35 期回测中从未触及，那条分支是死代码。
@@ -237,8 +237,8 @@ def equity_anchor(etf_price: float, etf_high: float, spot_at_record: bool) -> di
     return {
         "drawdown_pct": round(dd, 1),
         "alert": alert,
-        "note": ("股价已深度回撤而现货仍创新高——前瞻定价先于现货转向，"
-                 "2018/2022两轮均出现此形态" if alert else "股价与现货未见显著背离"),
+        "note": ("资本市场已深度回撤而现货仍创新高——前瞻定价先于现货转向，"
+                 "2018/2022两轮均出现此形态" if alert else "资本市场定价与现货未见显著背离"),
     }
 
 
@@ -365,16 +365,16 @@ def explain_demand(m):
 
 
 def explain_narrative(m):
-    """⑤ 卖方一致性与话术"""
-    rules = [{"cond": "短缺预测覆盖 >3 年", "score": 80}, {"cond": ">2 年", "score": 60},
+    """⑤ 行业预期一致性"""
+    rules = [{"cond": "短缺预期覆盖 >3 年", "score": 80}, {"cond": ">2 年", "score": 60},
              {"cond": ">1 年", "score": 40}, {"cond": "≤1 年", "score": 20}]
     y = m["years_out"]
-    hit = "短缺预测覆盖 >3 年" if y > 3 else ">2 年" if y > 2 else ">1 年" if y > 1 else "≤1 年"
+    hit = "短缺预期覆盖 >3 年" if y > 3 else ">2 年" if y > 2 else ">1 年" if y > 1 else "≤1 年"
     add = []
     if m.get("mega"): add.append("龙头上市/巨额融资 +10")
-    if m.get("bears"): add.append("每有 1 方公开看空 −10（最多 −20），本期 %d 方" % m["bears"])
+    if m.get("bears"): add.append("每有 1 方公开提出异议 −10（最多 −20），本期 %d 方" % m["bears"])
     return {
-        "range": "统计范围为主流卖方研究与产业媒体对存储短缺持续时间的一致预期，"
+        "range": "统计范围为主流行业研究与产业媒体对存储短缺持续时间的一致预期，"
                  "季度更新。本期数值 asof %s。" % m.get("asof", "—"),
         "rules": rules, "hit": hit, "adds": add,
         "base": _base(rules, hit), "final": score_narrative(m),
@@ -457,7 +457,7 @@ BOTTOM_PARTS = [
     ("供给投降", 0.30, "capex 转负、出现明确减产公告。原厂停止扩产是周期见底的前置条件。"),
     ("库存去化", 0.25, "下游库存周数相对上期的下降幅度。注意是「正在降」而非「已经低」。"),
     ("价格企稳", 0.25, "现货溢价从深度负值回升；由负转正额外加分，那是关键确认。"),
-    ("悲观一致", 0.20, "卖方叙事转空的程度（信号⑤的反面）。人人看空时往往已在底部附近。"),
+    ("预期转向", 0.20, "行业叙事由乐观转向谨慎的程度（信号⑤的反面）。产业普遍转向保守时，往往已接近周期底部。"),
 ]
 
 
@@ -474,7 +474,7 @@ def explain_bottom(parts, total):
                "所以它必须用另一套算法，也就必然是另一个数。",
         "parts": rows,
         "total": total,
-        "gate": "≥60 才算条件凑齐。低于 60 不代表危险，只代表「还不是主动买入的时点」。",
+        "gate": "≥60 才算反转条件集齐。低于 60 只说明产业尚未出现触底特征，与景气好坏无关。",
         "example": "2018Q1 与 2019Q4 的行业温度都是 36°，但触底信号一个 18、一个 99——"
                    "前者是上行刚起步，后者是周期最底部。温度分不开的，这个数分得开。",
         "zero_note": ("本期 %s 为 0，是总分偏低的主因。" % "、".join(zero)) if zero else "",

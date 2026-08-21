@@ -4,7 +4,7 @@
 存储周期温度计 · 每周更新（v3.1）
 
 架构变更（因中转网关的 web_search 实现不可用而重构）：
-  第一层 确定性抓取：现货价、股价锚 —— 由 fetcher.py 正则解析，不经过任何 LLM。
+  第一层 确定性抓取：现货价、市场定价锚 —— 由 fetcher.py 正则解析，不经过任何 LLM。
                      这两项是唯一按周变动的指标，也是主触发器的判据，必须可靠。
   第二层 人工维护：季度类指标读 data/quarterly_inputs.json。它们本就按季更新，
                    自动抓取的误判风险远大于收益。
@@ -32,7 +32,7 @@ HIST = os.path.join(ROOT, "data", "history_v3.json")
 QIN  = os.path.join(ROOT, "data", "quarterly_inputs.json")
 OUT  = os.path.join(ROOT, "data", "data.json")
 
-NAMES = ["现货价动能", "设备商存储订单", "下游库存与囤货", "需求引擎(AI capex)", "卖方一致性与话术"]
+NAMES = ["现货价动能", "设备商存储订单", "下游库存与囤货", "需求引擎(AI capex)", "行业预期一致性"]
 LEADS = ["领先1–2季度 · 主触发器", "领先12–18个月 · 背景条件", "领先2–3季度",
          "核心变量 · 门槛条件", "反向指标 · 背景条件"]
 
@@ -44,8 +44,8 @@ def bj_today():
 def optional_note(scores, spot, eq):
     """可选：LLM 一句话摘要。任何失败都静默降级为规则生成的摘要。"""
     fallback = (f"现货${spot['latest']}（{'创新高' if spot['at_record'] else '未创新高'}），"
-                f"连跌{spot['weeks_down']}周；股价距高点{eq['drawdown_pct']}%" if eq else
-                f"现货${spot['latest']}，连跌{spot['weeks_down']}周")
+                f"连续下跌{spot['weeks_down']}期；市场定价距高点{eq['drawdown_pct']}%" if eq else
+                f"现货${spot['latest']}，连续下跌{spot['weeks_down']}期")
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if not key or os.environ.get("DISABLE_LLM_NOTE") == "1":
         return fallback
@@ -58,10 +58,11 @@ def optional_note(scores, spot, eq):
             model=os.environ.get("CLAUDE_MODEL", "claude-sonnet-5"), max_tokens=300,
             messages=[{"role": "user", "content":
                 f"存储周期监测本期数据：五信号分数{scores}（越高越接近周期顶部），"
-                f"现货${spot['latest']}较上期${spot['prev']}，连续下跌{spot['weeks_down']}周，"
+                f"现货${spot['latest']}较上期${spot['prev']}，连续下跌{spot['weeks_down']}期，"
                 f"{'创历史新高' if spot['at_record'] else '未创新高'}；"
-                f"存储股ETF距高点{eq['drawdown_pct'] if eq else 'NA'}%。"
-                f"用一句话（40字内）陈述本期最值得注意的事实，只陈述不判断，不要任何前后缀。"}])
+                f"市场定价锚距高点{eq['drawdown_pct'] if eq else 'NA'}%。"
+                f"用一句话（40字内）陈述本期最值得注意的产业事实，只陈述不判断，"
+                f"不涉及股票、证券、基金或任何买卖建议，不要任何前后缀。"}])
         t = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text").strip()
         return t[:80] if t else fallback
     except Exception as e:
@@ -78,7 +79,7 @@ def main(dry_run=False, no_upload=False):
     eq_raw = fetcher.fetch_equity()
     print(f"[抓取] 现货 {spot['latest_date']} ${spot['latest']}（上期 {spot['prev_date']} ${spot['prev']}）"
           f" 连跌{spot['weeks_down']}周 序列{spot['series_len']}条")
-    print(f"[抓取] 股价锚 {eq_raw}")
+    print(f"[抓取] 市场定价锚 {eq_raw}")
 
     wow = (spot["latest"] / spot["prev"] - 1) * 100 if spot.get("prev") else 0.0
 
@@ -149,12 +150,16 @@ def main(dry_run=False, no_upload=False):
         "bottom_explain": sc.explain_bottom(b.get("parts", [0, 0, 0, 0]), b["total"]),
         "equity_anchor": eq or {}, "spot": spot, "sources": sources, "note": note,
         "quarterly": hist["quarterly"], "weekly": hist["weekly"],
-        "disclaimer": "本页面为个人研究用途的公开信息聚合，由程序按固定规则自动生成，"
-                      "季度序列为历史规则重建而非实测，可能存在错误或延迟，不构成任何投资建议。",
+        "disclaimer": "本页面为个人自用的半导体存储产业公开信息聚合，由程序按固定规则自动"
+                      "生成，所载均为产业运营指标（现货报价、资本开支、库存周数等），"
+                      "季度序列为历史规则重建而非实测，可能存在错误或延迟。"
+                      "页内「市场定价锚」引用公开市场价格指标，仅作为产业周期的旁证，"
+                      "不作个股或产品指向。本页面不提供金融、证券、基金、投资顾问相关服务，"
+                      "不推荐任何金融产品，不提供买卖时点参考，不构成投资建议。",
     }
     payload = json.dumps(data, ensure_ascii=False, indent=1).encode("utf-8")
-    print(f"{today}: 五信号={scores} 顶温={r['total']} 底温={b['total']} 相位={phase} "
-          f"触发={r['triggers'] or '无'} 股价背离={'是' if (eq and eq['alert']) else '否'}")
+    print(f"{today}: 五信号={scores} 行业温度={r['total']} 触底信号={b['total']} 相位={phase} "
+          f"触发={r['triggers'] or '无'} 定价背离={'是' if (eq and eq['alert']) else '否'}")
     if dry_run:
         print("[dry-run] 未写 history_v3.json / data.json，未上传")
         return

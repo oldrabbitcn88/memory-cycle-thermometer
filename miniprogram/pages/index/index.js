@@ -12,7 +12,7 @@ Page({
   onShareAppMessage(){
     const d = this.data.d;
     return {
-      title: d ? `存储周期温度计 · 顶温${d.top}° ${d.phase}` : '存储周期温度计',
+      title: d ? `存储周期温度计 · 行业温度${d.top}° ${d.phase}` : '存储周期温度计',
       path: '/pages/index/index'
     };
   },
@@ -79,7 +79,7 @@ Page({
     if(id===2) return `capex同比 ${m.yoy_pct}% · 新fab ${m.new_fabs||0} 座${m.new_entrant?' · 新玩家扩产':''}`;
     if(id===3) return `库存 ${m.weeks} 周${m.lta?' · 长约锁量':''}${m.sellout?' · 售罄话术':''}${m.cancel?' · 已现砍单':''}`;
     if(id===4) return `削减家数 ${m.n_cutting||0}${m.peaked?' · 增速见顶':''}${m.doubt?' · 回报率质疑':''}`;
-    if(id===5) return `短缺预测 ${m.years_out} 年 · 看空 ${m.bears||0} 方${m.mega?' · 龙头上市/巨额融资':''}`;
+    if(id===5) return `短缺预期 ${m.years_out} 年 · 异议 ${m.bears||0} 方${m.mega?' · 龙头上市/巨额融资':''}`;
     return '';
   },
 
