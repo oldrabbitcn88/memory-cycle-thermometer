@@ -68,3 +68,5 @@
 .rs{margin-left:16rpx;font-variant-numeric:tabular-nums}
 .row.bot{margin-top:8rpx;padding-top:12rpx;border-top:1rpx dashed #e5e7eb}
 .row.bot .q{margin-left:12rpx}
+.age{font-weight:400;color:#9ca3af;font-size:22rpx}
+.age.age-warn{color:#dc2626;font-weight:700}

@@ -28,7 +28,8 @@
     </view>
 
     <view class="card">
-      <view class="row"><text class="k">读数日期</text><text class="v">{{d.updated}}</text></view>
+      <view class="row"><text class="k">读数日期</text>
+        <text class="v">{{d.updated}}<text class="age {{ageStale ? 'age-warn' : ''}}"> · {{ageText}}</text></text></view>
       <view class="row"><text class="k">亮灯计数</text><text class="v">≥50 共 {{d.n50}} 盏 · ≥75 共 {{d.n75}} 盏</text></view>
       <view class="trig" wx:if="{{d.triggers.length}}">
         <view wx:for="{{d.triggers}}" wx:key="*this">⚠ {{item}}</view>
@@ -75,7 +76,7 @@
         <view class="val" style="color:{{s.color}}">{{s.score}}</view>
       </view>
       <view class="bar"><view class="fill" style="width:{{s.score}}%;background:{{s.color}}"></view></view>
-      <view class="met"><text class="mt">{{s.metricText}}</text><text class="q">{{s.open ? '收起' : '打分逻辑 ›'}}</text></view>
+      <view class="met" bindtap="toggle" data-i="{{i}}"><text class="mt">{{s.metricText}}</text><text class="q">{{s.open ? '收起' : '打分逻辑 ›'}}</text></view>
 
       <view class="exp" wx:if="{{s.open && s.explain}}">
         <view class="exp-h">统计范围与来源</view>

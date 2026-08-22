@@ -5,6 +5,7 @@ const colorOf = v => v<30?C.g : v<50?C.l : v<70?C.a : C.r;
 
 Page({
   data:{ loading:true, err:'', d:null, sig:[], topColor:'', botColor:'', tab:'weekly',
+         ageText:'', ageStale:false,
          tempPct:0, tempOpen:false, botOpen:false, spotTip:'' },
   onLoad(){ this.fetch(); },
 
@@ -65,10 +66,14 @@ Page({
     }));
     // 温度在历史区间中的位置。区间取自 data.json 的 temp_range（回测35期+周度实测），
     // 因为温度的实际取值范围是 21–62 而非 0–100，不标区间读者无从判断高低。
+    // 读数新鲜度。只显示日期的话，定时任务漏跑是无声的——页面会一直显示同一个
+    // 日期，看着完全正常。定时任务每周一跑，所以超过 8 天没更新必然是漏了。
+    const age = this.ageOf(d.updated);
     const tr = d.temp_range || {min:0, max:100};
     const span = Math.max(1, tr.max - tr.min);
     const tempPct = Math.max(0, Math.min(100, (d.top - tr.min) / span * 100));
-    this.setData({loading:false, d, sig, tempPct, topColor:colorOf(d.top),
+    this.setData({loading:false, d, sig, tempPct, ageText:age.text, ageStale:age.stale,
+                  topColor:colorOf(d.top),
                   botColor: d.bottom>=60? C.g : '#9ca3af'}, ()=>this.draw(d));
   },
 
@@ -81,6 +86,18 @@ Page({
     if(id===4) return `削减家数 ${m.n_cutting||0}${m.peaked?' · 增速见顶':''}${m.doubt?' · 回报率质疑':''}`;
     if(id===5) return `短缺预期 ${m.years_out} 年 · 异议 ${m.bears||0} 方${m.mega?' · 龙头上市/巨额融资':''}`;
     return '';
+  },
+
+  ageOf(updated){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(updated || '')) return {text:'', stale:false};
+    const p = updated.split('-');
+    const then = new Date(+p[0], +p[1]-1, +p[2]);
+    const n = new Date();
+    const today = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    const days = Math.round((today - then) / 86400000);
+    if(days < 0) return {text:'', stale:false};
+    const text = days===0 ? '今天' : days===1 ? '昨天' : days + ' 天前';
+    return days > 8 ? {text: text + ' ⚠ 可能未更新', stale:true} : {text, stale:false};
   },
 
   toggleTemp(){ this.setData({tempOpen: !this.data.tempOpen}); },
