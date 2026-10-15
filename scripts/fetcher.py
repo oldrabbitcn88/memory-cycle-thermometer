@@ -3,7 +3,7 @@
 """确定性数据抓取层：不依赖任何 LLM 或网关搜索能力。
 最时效敏感的两项（现货价、市场定价锚）由正则直接解析，失败即报错，不猜。"""
 import re, sys
-import requests
+from urllib.request import Request, urlopen
 
 UA = {"User-Agent": "Mozilla/5.0 (compatible; MemoryCycleThermometer/1.0)"}
 SRC_SPOT = "https://capitalandcompute.net/memory-prices/"
@@ -13,9 +13,9 @@ MONTHS = {m: i+1 for i, m in enumerate(
 
 
 def _get(url, timeout=45):
-    r = requests.get(url, headers=UA, timeout=timeout)
-    r.raise_for_status()
-    return r.text
+    req = Request(url, headers=UA)
+    with urlopen(req, timeout=timeout) as response:
+        return response.read().decode("utf-8", errors="replace")
 
 
 def fetch_spot():
