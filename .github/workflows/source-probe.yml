@@ -1,4 +1,4 @@
-name: Probe public memory-price sources
+name: Probe memory-price fetcher
 on:
   push:
     branches: [diagnose-source-20261015]
@@ -9,25 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check source responses
-        shell: bash
-        run: |
-          python - <<'PY'
-          import re, urllib.request, urllib.error
-          urls = (
-              "https://capitalandcompute.net/memory-prices/",
-              "https://capitalandcompute.net/memory-prices/history/",
-              "https://capitalandcompute.net/memory-prices.json",
-              "https://www.dramexchange.com/",
-          )
-          for url in urls:
-              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; MemoryCycleThermometer/1.0)"})
-              try:
-                  with urllib.request.urlopen(req, timeout=20) as r:
-                      body = r.read().decode("utf-8", errors="replace")
-                      rows = re.findall(r"(?:Sep|Oct)\\s+\\d{1,2},\\s*2026[^$]{0,60}\\$\\s*\\d+\\.\\d{2}", body)
-                      print(f"{url} status={r.status} bytes={len(body)} recent_price_rows={len(rows)}")
-                      for row in rows[-3:]: print("sample:", re.sub(r"<[^>]+>", " ", row)[:120])
-              except Exception as exc:
-                  print(f"{url} error={type(exc).__name__}: {exc}")
-          PY
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install requests
+      - name: Run the repository fetcher without writes
+        run: python scripts/fetcher.py
