@@ -1,5 +1,5 @@
 {
- "updated": "2026-09-28",
+ "updated": "2026-10-15",
  "schema": "v3.1",
  "top": 32,
  "bottom": 7,
@@ -18,7 +18,7 @@
    "weight": 0.25,
    "metrics": {
     "premium_pct": 120.0,
-    "wow_pct": 0.7,
+    "wow_pct": 0.46,
     "weeks_down": 0
    },
    "fresh": true,
@@ -234,7 +234,7 @@
  "temp_range": {
   "min": 21,
   "max": 62,
-  "n": 51
+  "n": 52
  },
  "bottom_parts": [
   10,
@@ -277,21 +277,21 @@
   "zero_note": "本期 库存去化、价格企稳 为 0，是总分偏低的主因。"
  },
  "equity_anchor": {
-  "drawdown_pct": -23.9,
-  "alert": false,
-  "note": "资本市场定价与现货未见显著背离",
-  "price": 61.91,
+  "drawdown_pct": -26.8,
+  "alert": true,
+  "note": "资本市场已深度回撤而现货仍创新高——前瞻定价先于现货转向，2018/2022两轮均出现此形态",
+  "price": 59.52,
   "high_52w": 81.34,
   "source": "https://capitalandcompute.net/memory-prices/"
  },
  "spot": {
-  "latest_date": "2026-09-24",
-  "latest": 46.11,
-  "prev_date": "2026-09-16",
-  "prev": 45.79,
+  "latest_date": "2026-10-06",
+  "latest": 46.32,
+  "prev_date": "2026-09-24",
+  "prev": 46.11,
   "weeks_down": 0,
   "at_record": true,
-  "series_len": 19,
+  "series_len": 20,
   "source": "https://capitalandcompute.net/memory-prices/",
   "series": [
    {
@@ -369,6 +369,10 @@
    {
     "d": "2026-09-24",
     "p": 46.11
+   },
+   {
+    "d": "2026-10-06",
+    "p": 46.32
    }
   ]
  },
@@ -382,7 +386,7 @@
    "url": "https://www.trendforce.com/price/dram/dram_spot"
   }
  ],
- "note": "现货$46.11（创新高），连续下跌0期；市场定价距高点-23.9%",
+ "note": "现货$46.32（创新高），连续下跌0期；市场定价距高点-26.8%",
  "quarterly": [
   {
    "period": "2018Q1",
@@ -1386,6 +1390,27 @@
    "spot": 46.11,
    "wow": 0.7,
    "note": "现货$46.11（创新高），连续下跌0期；市场定价距高点-23.9%"
+  },
+  {
+   "period": "2026-10-15",
+   "s": [
+    10,
+    90,
+    55,
+    35,
+    80
+   ],
+   "top": 32,
+   "bottom": 7,
+   "phase": "扩张期",
+   "n50": 3,
+   "n75": 2,
+   "trig": false,
+   "conf": "high",
+   "kind": "周度实测",
+   "spot": 46.32,
+   "wow": 0.46,
+   "note": "现货$46.32（创新高），连续下跌0期；市场定价距高点-26.8%"
   }
  ],
  "disclaimer": "本页面为个人自用的半导体存储产业公开信息聚合，由程序按固定规则自动生成，所载均为产业运营指标（现货报价、资本开支、库存周数等），季度序列为历史规则重建而非实测，可能存在错误或延迟。页内「市场定价锚」引用公开市场价格指标，仅作为产业周期的旁证，不作个股或产品指向。本页面不提供金融、证券、基金、投资顾问相关服务，不推荐任何金融产品，不提供买卖时点参考，不构成投资建议。"
