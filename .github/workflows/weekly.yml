@@ -1,9 +1,6 @@
 name: 每周更新存储周期温度计
 
 on:
-  push:
-    paths:
-      - scripts/fetcher.py
   schedule:
     - cron: "30 0 * * 1"      # UTC 周一 00:30 = 北京 08:30
   workflow_dispatch: {}
