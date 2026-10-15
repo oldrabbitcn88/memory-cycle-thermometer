@@ -1,4 +1,4 @@
-name: Probe memory-price fetcher
+name: Probe memory-price update
 on:
   push:
     branches: [diagnose-source-20261015]
@@ -13,5 +13,9 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: pip install requests
-      - name: Run the repository fetcher without writes
-        run: python scripts/fetcher.py
+      - name: Dry-run complete update
+        env:
+          DISABLE_LLM_NOTE: "1"
+        run: python scripts/update.py --dry-run
+      - name: Regression self-check
+        run: python backtest/probe.py
